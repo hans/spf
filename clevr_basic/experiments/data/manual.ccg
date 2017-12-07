@@ -18,3 +18,6 @@ what number of other objects are the same size as the purple shiny object
 
 what material is the big object that is right of the brown cylinder and left of the large brown sphere
 (query_material:<e,p> (unique:<<e,t>,e> (filter_size:<<e,t>,<p,<e,t>>> (intersect:<<e,t>,<<e,t>,<e,t>>> (relate:<e,<s,<e,t>>> (unique:<<e,t>,e> (filter_shape:<<e,t>,<p,<e,t>>> (filter_color:<<e,t>,<p,<e,t>>> (filter_size:<<e,t>,<p,<e,t>>> scene:<e,t> large:p) brown:p) sphere:p)) left:s) (relate:<e,<s,<e,t>>> (unique:<<e,t>,e> (filter_shape:<<e,t>,<p,<e,t>>> (filter_color:<<e,t>,<p,<e,t>>> scene:<e,t> brown:p) cylinder:p)) right:s)) large:p)))
+
+what number of cylinders are either big cyan things or yellow matte things
+(count:<<e,t>,i> (filter_shape:<<e,t>,<p,<e,t>>> (union:<<e,t>,<<e,t>,<e,t>>> (filter_color:<<e,t>,<p,<e,t>>> (filter_size:<<e,t>,<p,<e,t>>> scene:<e,t> large:p) cyan:p) (filter_material:<<e,t>,<p,<e,t>>> (filter_color:<<e,t>,<p,<e,t>>> scene:<e,t> yellow:p) rubber:p)) cylinder:p))
