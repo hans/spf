@@ -1,6 +1,6 @@
 include=../../params.inc
-outputDir=/om/scratch/Wed/jgauthie/logs0
-globalLog=/om/scratch/Wed/jgauthie/logs0/global.log
+outputDir=/om/scratch/Wed/jgauthie/logs_dev
+globalLog=/om/scratch/Wed/jgauthie/logs_dev/global.log
 
 # Resources
 # Parser
@@ -14,7 +14,7 @@ include=../genlex.inc
 # Training and testing sets
 include=data.inc
 #type=data.composite id=train sets=fold1,fold2,fold3,fold4,fold5,fold6,fold7,fold8,fold9
-type=data.composite id=train sets=train0
+type=data.composite id=train sets=manual
 type=data.composite id=test sets=test0
 # Learner and tester
 include=../learn.inc
