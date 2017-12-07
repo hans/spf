@@ -15,7 +15,7 @@ include=../genlex.inc
 include=data.inc
 #type=data.composite id=train sets=fold1,fold2,fold3,fold4,fold5,fold6,fold7,fold8,fold9
 type=data.composite id=train sets=manual
-type=data.composite id=test sets=test0
+type=data.composite id=test sets=manual
 # Learner and tester
 include=../learn.inc
 # Initializars
