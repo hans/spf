@@ -116,6 +116,8 @@ public class SingleSentenceCollection
 						}
 
 						try {
+							System.out.println("full string: " + expString.toString());
+							System.out.println("current sentence: " + currentSentence);
 							exp = Simplify.of(LogicalExpression
 									.read(expString.toString()));
 						} catch (final LogicalExpressionRuntimeException e) {
