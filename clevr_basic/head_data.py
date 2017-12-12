@@ -21,6 +21,23 @@ def process_sexpr(line):
   except KeyError as e:
     print(line)
     raise e
+
+  # reverse sequences of filter_* calls
+  call_seq = line.split(" ")
+  print(call_seq)
+  filter_seq, new_seq = [], []
+  for el in call_seq:
+    print(el)
+    if el.startswith("(filter_"):
+      filter_seq.append(el)
+    else:
+      new_seq.extend(reversed(filter_seq))
+      filter_seq = []
+      new_seq.append(el)
+  new_seq.extend(filter_seq)
+
+  line = " ".join(new_seq)
+
   return line
 
 
@@ -34,25 +51,26 @@ def finalize(sentence, sexpr):
   print()
 
 
-with DATA_PATH.open("r") as data_f:
-  limit = int(sys.argv[1]) if len(sys.argv) > 1 else 5
-  n = 0
+if __name__ == "__main__":
+  with DATA_PATH.open("r") as data_f:
+    limit = int(sys.argv[1]) if len(sys.argv) > 1 else 5
+    n = 0
 
-  sentence, sexpr = None, None
-  for line in data_f:
-    if n == limit:
-      break
+    sentence, sexpr = None, None
+    for line in data_f:
+      if n == limit:
+        break
 
-    line = line.strip()
-    if sentence is not None and line.startswith("("):
-      sexpr = process_sexpr(line)
-      finalize(sentence, sexpr)
-      n += 1
+      line = line.strip()
+      if sentence is not None and line.startswith("("):
+        sexpr = process_sexpr(line)
+        finalize(sentence, sexpr)
+        n += 1
 
-      sentence, sexpr = None, None
-    elif sentence is None and line:
-      sentence = process_sentence(line)
-    elif not line:
-      continue
-    else:
-      raise ValueError("Unexpected line %r" % line)
+        sentence, sexpr = None, None
+      elif sentence is None and line:
+        sentence = process_sentence(line)
+      elif not line:
+        continue
+      else:
+        raise ValueError("Unexpected line %r" % line)
