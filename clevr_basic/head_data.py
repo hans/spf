@@ -41,7 +41,7 @@ class Node(object):
     if self.children:
       return "(%s %s)" % (self._typed_name, " ".join(str(child) for child in self.children))
     else:
-      return self.name
+      return self._typed_name
 
   __repr__ = __str__
 
