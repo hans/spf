@@ -15,47 +15,47 @@ union:<<e,t>,<<e,t>,<e,t>>>
 unique:<<e,t>,e>
 relate:<e,<s,<e,t>>>
 
-filter_size:<<e,t>,<p,<e,t>>>
-filter_material:<<e,t>,<p,<e,t>>>
-filter_color:<<e,t>,<p,<e,t>>>
-filter_shape:<<e,t>,<p,<e,t>>>
+filter_size:<<e,t>,<psi,<e,t>>>
+filter_material:<<e,t>,<pm,<e,t>>>
+filter_color:<<e,t>,<pc,<e,t>>>
+filter_shape:<<e,t>,<psh,<e,t>>>
 
 same_size:<e,<e,t>>
 same_material:<e,<e,t>>
 same_color:<e,<e,t>>
 same_shape:<e,<e,t>>
 
-equal_size:<p,<p,t>>
-equal_material:<p,<p,t>>
-equal_color:<p,<p,t>>
-equal_shape:<p,<p,t>>
+equal_size:<psi,<psi,t>>
+equal_material:<pm,<pm,t>>
+equal_color:<pc,<pc,t>>
+equal_shape:<psh,<psh,t>>
 equal_integer:<i,<i,t>>
 
-query_material:<e,p>
-query_shape:<e,p>
-query_size:<e,p>
-query_color:<e,p>
+query_material:<e,pm>
+query_shape:<e,psh>
+query_size:<e,psi>
+query_color:<e,pc>
 
 scene:<e,t>
 
-cube:p
-sphere:p
-cylinder:p
+cube:psh
+sphere:psh
+cylinder:psh
 
-large:p
-small:p
-metal:p
-rubber:p
-green:p
-purple:p
-blue:p
-brown:p
-gray:p
-cyan:p
-yellow:p
-red:p
-shiny:p
-matte:p
+large:psi
+small:psi
+metal:pm
+rubber:pm
+green:pc
+purple:pc
+blue:pc
+brown:pc
+gray:pc
+cyan:pc
+yellow:pc
+red:pc
+shiny:pm
+matte:pm
 
 left:s
 right:s
