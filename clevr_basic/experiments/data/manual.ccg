@@ -19,8 +19,17 @@ what number of other objects are the same size as the purple shiny object
 the green object and brown object
 (unique:<<e,t>,e> (intersect:<<e,t>,<<e,t>,<e,t>>> (filter_color:<<e,t>,<pc,<e,t>>> scene:<e,t> green:pc) (filter_color:<<e,t>,<pc,<e,t>>> scene:<e,t> brown:pc)))
 
-//the big object right of the brown cylinder and left of the brown cylinder
-//(unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> (intersect:<<e,t>,<<e,t>,<e,t>>> (relate:<e,<s,<e,t>>> (unique:<<e,t>,e> (filter_color:<<e,t>,<pc,<e,t>>> (filter_shape:<<e,t>,<psh,<e,t>>> scene:<e,t> cylinder:psh) brown:pc)) right:s) (relate:<e,<s,<e,t>>> (unique:<<e,t>,e> (filter_color:<<e,t>,<pc,<e,t>>> (filter_shape:<<e,t>,<psh,<e,t>>> scene:<e,t> cylinder:psh) brown:pc)) left:s) large:psi))
+the big object that is right of the brown cylinder and left of the large brown sphere
+(unique:<<e,t>,e>
+ (filter_size:<<e,t>,<psi,<e,t>>>
+  (intersect:<<e,t>,<<e,t>,<e,t>>>
+   (relate:<e,<s,<e,t>>>
+    (unique:<<e,t>,e> (filter_color:<<e,t>,<pc,<e,t>>> (filter_shape:<<e,t>,<psh,<e,t>>> scene:<e,t> cylinder:psh) brown:pc))
+    right:s)
+   (relate:<e,<s,<e,t>>>
+    (unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> (filter_color:<<e,t>,<pc,<e,t>>> (filter_shape:<<e,t>,<psh,<e,t>>> scene:<e,t> sphere:psh) brown:pc) large:psi))
+    left:s))
+  large:psi))
 
 what material is the big object that is right of the brown cylinder and left of the large brown sphere
 (query_material:<e,pm> (unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> (intersect:<<e,t>,<<e,t>,<e,t>>> (relate:<e,<s,<e,t>>> (unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> (filter_color:<<e,t>,<pc,<e,t>>> (filter_shape:<<e,t>,<psh,<e,t>>> scene:<e,t> sphere:psh) brown:pc) large:psi)) left:s) (relate:<e,<s,<e,t>>> (unique:<<e,t>,e> (filter_color:<<e,t>,<pc,<e,t>>> (filter_shape:<<e,t>,<psh,<e,t>>> scene:<e,t> cylinder:psh) brown:pc)) right:s)) large:psi)))
