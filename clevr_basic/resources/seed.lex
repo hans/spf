@@ -6,7 +6,7 @@ cylinders :- N : (lambda $0:<e,t> (filter_shape:<<e,t>,<psh,<e,t>>> $0 cylinder:
 other objects :- N : (lambda $0:<e,t> $0)
 
 metallic :- N/N : (lambda $0:<e,t> (filter_material:<<e,t>,<pm,<e,t>>> $0 metal:pm))
-shiny :- N/N : (lambda $0:<e,t> (filter_material:<<e,t>,<pm,<e,t>>> $0 shiny:pm))
+shiny :- N/N : (lambda $0:<e,t> (filter_material:<<e,t>,<pm,<e,t>>> $0 metal:pm))
 big :- N/N : (lambda $0:<e,t> (filter_size:<<e,t>,<psi,<e,t>>> $0 large:psi))
 green :- N/N : (lambda $0:<e,t> (filter_color:<<e,t>,<pc,<e,t>>> $0 green:pc))
 brown :- N/N : (lambda $0:<e,t> (filter_color:<<e,t>,<pc,<e,t>>> $0 brown:pc))
