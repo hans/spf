@@ -36,10 +36,10 @@ public class CLEVRScene {
 
             JSONArray coords = (JSONArray) obj_.get("3d_coords");
             objects.add(new CLEVRObject(
-                    CLEVRColor.valueOf(((String) obj_.get("color")).toUpperCase()),
-                    CLEVRSize.valueOf(((String) obj_.get("size")).toUpperCase()),
-                    CLEVRShape.valueOf(((String) obj_.get("shape")).toUpperCase()),
-                    CLEVRMaterial.valueOf(((String) obj_.get("material")).toUpperCase()),
+                    (String) obj_.get("color"),
+                    (String) obj_.get("size"),
+                    (String) obj_.get("shape"),
+                    (String) obj_.get("material"),
                     (double) obj_.get("rotation"),
                     (double) coords.get(0), (double) coords.get(1),
                     (double) coords.get(2)));
@@ -75,7 +75,13 @@ public class CLEVRScene {
 
     public CLEVRAnswer evaluate(LogicalExpression expr) {
         CLEVREvaluationServices services = new CLEVREvaluationServices(this);
-        return (CLEVRAnswer) Evaluation.of(expr, services);
+        Object ret = Evaluation.of(expr, services);
+        return new CLEVRAnswer(ret);
+    }
+
+    private Object evaluate(String exprString) {
+        LogicalExpression expr = Simplify.of(LogicalExpression.read(exprString));
+        return evaluate(expr);
     }
 
     public int getImageIndex() {
@@ -111,16 +117,23 @@ public class CLEVRScene {
             throw new RuntimeException(e);
         }
 
-        LogicalExpression expr = Simplify.of(LogicalExpression.read(
-                "(unique:<<e,t>,e> (filter_size:<<e,t>,<p,<e,t>>> scene:<e,t> large:p))"));
-
         Set<CLEVRObject> objects = new HashSet<>();
-        objects.add(new CLEVRObject(CLEVRColor.BLACK, CLEVRSize.LARGE, CLEVRShape.CYLINDER,
-                CLEVRMaterial.METAL, 0, 0, 0, 0));
-        objects.add(new CLEVRObject(CLEVRColor.GREEN, CLEVRSize.SMALL, CLEVRShape.CYLINDER,
-                CLEVRMaterial.METAL, 0, 0, 0, 0));
+        objects.add(new CLEVRObject("black", "large", "cylinder", "metal",
+                0, 0, 0, 0));
+        objects.add(new CLEVRObject("green", "small", "cylinder", "metal",
+                0, 0, 0, 0));
 
         CLEVRScene scene = new CLEVRScene(0, objects, null);
-        System.out.println(scene.evaluate(expr));
+
+        System.out.println(scene.evaluate(
+                "(query_material:<e,pm> (unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> scene:<e,t> large:psi)))"
+        ));
+
+        System.out.println(scene.evaluate(
+                "(same_shape:<e,<e,t>> " +
+                        "(unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> scene:<e,t> large:psi))" +
+                        "(unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> scene:<e,t> small:psi)))"
+        ));
     }
+
 }
