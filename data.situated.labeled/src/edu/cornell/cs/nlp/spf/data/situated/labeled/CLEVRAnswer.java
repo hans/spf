@@ -1,4 +1,4 @@
-package edu.cornell.cs.nlp.spf.data.situated;
+package edu.cornell.cs.nlp.spf.data.situated.labeled;
 
 public class CLEVRAnswer {
 

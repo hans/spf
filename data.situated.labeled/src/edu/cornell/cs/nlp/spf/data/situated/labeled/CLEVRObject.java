@@ -1,6 +1,6 @@
-package edu.cornell.cs.nlp.spf.data.situated;
+package edu.cornell.cs.nlp.spf.data.situated.labeled;
 
-import static edu.cornell.cs.nlp.spf.data.situated.CLEVRTypes.*;
+import static edu.cornell.cs.nlp.spf.data.situated.labeled.CLEVRTypes.*;
 
 public class CLEVRObject {
     private final CLEVRColor color;
@@ -23,5 +23,50 @@ public class CLEVRObject {
         this.x = x;
         this.y = y;
         this.z = z;
+    }
+
+    public <T extends Enum<T>> T getAttribute(Class<T> attribute) {
+        if (attribute == CLEVRColor.class)
+            return (T) this.color;
+        else if (attribute == CLEVRSize.class)
+            return (T) this.size;
+        else if (attribute == CLEVRShape.class)
+            return (T) this.shape;
+        else if (attribute == CLEVRMaterial.class)
+            return (T) this.material;
+        else
+            throw new RuntimeException("unknown attribute class " + attribute.toString());
+    }
+
+    public CLEVRColor getColor() {
+        return color;
+    }
+
+    public CLEVRSize getSize() {
+        return size;
+    }
+
+    public CLEVRShape getShape() {
+        return shape;
+    }
+
+    public CLEVRMaterial getMaterial() {
+        return material;
+    }
+
+    public double getRotation() {
+        return rotation;
+    }
+
+    public double getX() {
+        return x;
+    }
+
+    public double getY() {
+        return y;
+    }
+
+    public double getZ() {
+        return z;
     }
 }

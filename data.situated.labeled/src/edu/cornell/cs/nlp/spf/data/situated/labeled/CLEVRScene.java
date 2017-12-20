@@ -1,19 +1,27 @@
-package edu.cornell.cs.nlp.spf.data.situated;
+package edu.cornell.cs.nlp.spf.data.situated.labeled;
 
+import edu.cornell.cs.nlp.spf.mr.lambda.FlexibleTypeComparator;
+import edu.cornell.cs.nlp.spf.mr.lambda.LogicLanguageServices;
+import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
+import edu.cornell.cs.nlp.spf.mr.lambda.exec.naive.Evaluation;
+import edu.cornell.cs.nlp.spf.mr.lambda.visitor.Simplify;
+import edu.cornell.cs.nlp.spf.mr.language.type.TypeRepository;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
-import static edu.cornell.cs.nlp.spf.data.situated.CLEVRTypes.*;
+import static edu.cornell.cs.nlp.spf.data.situated.labeled.CLEVRTypes.*;
 
 public class CLEVRScene {
 
     private final int imageIndex;
-    private final List<CLEVRObject> objects;
+    private final Set<CLEVRObject> objects;
     private final Map<CLEVRRelation, List<List<CLEVRObject>>> relations;
 
-    public CLEVRScene(int imageIndex, List<CLEVRObject> objects, Map<CLEVRRelation, List<List<CLEVRObject>>> relations) {
+    public CLEVRScene(int imageIndex, Set<CLEVRObject> objects, Map<CLEVRRelation, List<List<CLEVRObject>>> relations) {
         this.imageIndex = imageIndex;
         this.objects = objects;
         this.relations = relations;
@@ -55,11 +63,64 @@ public class CLEVRScene {
             relations.put(relation, allInstances);
         }
 
+        // Order of objects collection doesn't matter now.
+        Set<CLEVRObject> objectsSet = new HashSet<>(objects);
+
         return new CLEVRScene(
                 (int) scene.get("image_index"),
-                objects,
+                objectsSet,
                 relations
         );
     }
 
+    public CLEVRAnswer evaluate(LogicalExpression expr) {
+        CLEVREvaluationServices services = new CLEVREvaluationServices(this);
+        return (CLEVRAnswer) Evaluation.of(expr, services);
+    }
+
+    public int getImageIndex() {
+        return imageIndex;
+    }
+
+    public Set<CLEVRObject> getObjects() {
+        return objects;
+    }
+
+    public Map<CLEVRRelation, List<List<CLEVRObject>>> getRelations() {
+        return relations;
+    }
+
+
+    public static void main(String[] args) {
+        final File typesFile = new File("clevr_basic/resources/geo.types");
+
+        List<File> ontFiles = new ArrayList<>();
+        ontFiles.add(new File("clevr_basic/resources/geo.preds.ont"));
+        ontFiles.add(new File("clevr_basic/resources/geo.consts.ont"));
+
+        try {
+            LogicLanguageServices.setInstance(
+                    new LogicLanguageServices.Builder(
+                            new TypeRepository(typesFile),
+                            new FlexibleTypeComparator())
+                            .setNumeralTypeName("i").setUseOntology(true)
+                            .addConstantsToOntology(ontFiles).closeOntology(true)
+                            .build()
+            );
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        LogicalExpression expr = Simplify.of(LogicalExpression.read(
+                "(unique:<<e,t>,e> (filter_size:<<e,t>,<p,<e,t>>> scene:<e,t> large:p))"));
+
+        Set<CLEVRObject> objects = new HashSet<>();
+        objects.add(new CLEVRObject(CLEVRColor.BLACK, CLEVRSize.LARGE, CLEVRShape.CYLINDER,
+                CLEVRMaterial.METAL, 0, 0, 0, 0));
+        objects.add(new CLEVRObject(CLEVRColor.GREEN, CLEVRSize.SMALL, CLEVRShape.CYLINDER,
+                CLEVRMaterial.METAL, 0, 0, 0, 0));
+
+        CLEVRScene scene = new CLEVRScene(0, objects, null);
+        System.out.println(scene.evaluate(expr));
+    }
 }
