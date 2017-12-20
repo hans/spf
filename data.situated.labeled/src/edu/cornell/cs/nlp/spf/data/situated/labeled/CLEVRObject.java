@@ -1,6 +1,6 @@
-package edu.cornell.cs.nlp.spf.data.singlesentence;
+package edu.cornell.cs.nlp.spf.data.situated;
 
-import static edu.cornell.cs.nlp.spf.data.singlesentence.CLEVRTypes.*;
+import static edu.cornell.cs.nlp.spf.data.situated.CLEVRTypes.*;
 
 public class CLEVRObject {
     private final CLEVRColor color;

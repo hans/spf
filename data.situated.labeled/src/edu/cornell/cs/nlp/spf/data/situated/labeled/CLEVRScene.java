@@ -1,11 +1,11 @@
-package edu.cornell.cs.nlp.spf.data.singlesentence;
+package edu.cornell.cs.nlp.spf.data.situated;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.util.*;
 
-import static edu.cornell.cs.nlp.spf.data.singlesentence.CLEVRTypes.*;
+import static edu.cornell.cs.nlp.spf.data.situated.CLEVRTypes.*;
 
 public class CLEVRScene {
 

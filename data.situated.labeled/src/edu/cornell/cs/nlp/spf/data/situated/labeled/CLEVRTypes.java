@@ -1,4 +1,4 @@
-package edu.cornell.cs.nlp.spf.data.singlesentence;
+package edu.cornell.cs.nlp.spf.data.situated;
 
 public class CLEVRTypes {
     public enum CLEVRShape {
