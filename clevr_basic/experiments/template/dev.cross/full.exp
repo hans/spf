@@ -1,6 +1,7 @@
 include=../../params.inc
-outputDir=/om/scratch/Mon/jgauthie/logs_full
-globalLog=/om/scratch/Mon/jgauthie/logs_full/global.log
+gIter=20
+outputDir=../../out/logs_full
+globalLog=../../out/logs_full/global.log
 
 # Resources
 # Parser
