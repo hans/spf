@@ -41,6 +41,10 @@ public class LambdaResult implements ILambdaResult {
 	public int getNumKeys() {
 		return numKeys;
 	}
+
+	public boolean hasTupleWithKey(Object key) {
+		return tuples.stream().anyMatch((t) -> t.get(0).equals(key));
+	}
 	
 	@Override
 	public boolean isEmpty() {

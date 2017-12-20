@@ -5,6 +5,7 @@ import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
 import edu.cornell.cs.nlp.spf.mr.lambda.Variable;
 import edu.cornell.cs.nlp.spf.mr.lambda.exec.naive.AbstractEvaluationServices;
 import edu.cornell.cs.nlp.spf.mr.lambda.exec.naive.LambdaResult;
+import edu.cornell.cs.nlp.utils.composites.Pair;
 
 import static edu.cornell.cs.nlp.spf.data.situated.labeled.CLEVRTypes.*;
 
@@ -20,6 +21,7 @@ public class CLEVREvaluationServices extends AbstractEvaluationServices<CLEVRSce
     private final Map<String, Function<CLEVRObject, Boolean>> setLiterals = new HashMap<>();
 
     private final Map<String, Function<LambdaResult, CLEVRObject>> fetchFunctions = new HashMap<>();
+    private final Map<String, BiFunction<Pair<LambdaResult, LambdaResult>, CLEVRObject, Boolean>> setOpFunctions = new HashMap<>();
     private final Map<String, BiFunction<CLEVRObject, String, Boolean>> filterFunctions = new HashMap<>();
     private final Map<String, Function<CLEVRObject, String>> queryFunctions = new HashMap<>();
     private final Map<String, BiFunction<CLEVRObject, CLEVRObject, Boolean>> sameFunctions = new HashMap<>();
@@ -42,6 +44,11 @@ public class CLEVREvaluationServices extends AbstractEvaluationServices<CLEVRSce
                 return null;
             return (CLEVRObject) lresult.iterator().next().get(0);
         });
+
+        setOpFunctions.put("union",
+                (lrs, obj) -> lrs.first().hasTupleWithKey(obj) || lrs.second().hasTupleWithKey(obj));
+        setOpFunctions.put("intersection",
+                (lrs, obj) -> lrs.first().hasTupleWithKey(obj) && lrs.second().hasTupleWithKey(obj));
     }
 
     private void seedLiteralsForProperty(String propertyName, String[] vals) {
@@ -79,6 +86,11 @@ public class CLEVREvaluationServices extends AbstractEvaluationServices<CLEVRSce
             return filterFunctions.get(predicateName).apply(
                     (CLEVRObject) args[2],
                     (String) args[1]
+            );
+        } else if (setOpFunctions.containsKey(predicateName)) {
+            return setOpFunctions.get(predicateName).apply(
+                    Pair.of((LambdaResult) args[0], (LambdaResult) args[1]),
+                    (CLEVRObject) args[2]
             );
         } else if (fetchFunctions.containsKey(predicateName)) {
             return fetchFunctions.get(predicateName).apply((LambdaResult) args[0]);

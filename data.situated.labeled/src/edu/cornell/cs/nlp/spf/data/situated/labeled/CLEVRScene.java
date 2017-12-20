@@ -4,6 +4,7 @@ import edu.cornell.cs.nlp.spf.mr.lambda.FlexibleTypeComparator;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicLanguageServices;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
 import edu.cornell.cs.nlp.spf.mr.lambda.exec.naive.Evaluation;
+import edu.cornell.cs.nlp.spf.mr.lambda.exec.naive.LambdaResult;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.Simplify;
 import edu.cornell.cs.nlp.spf.mr.language.type.TypeRepository;
 import org.json.simple.JSONArray;
@@ -76,6 +77,14 @@ public class CLEVRScene {
     public CLEVRAnswer evaluate(LogicalExpression expr) {
         CLEVREvaluationServices services = new CLEVREvaluationServices(this);
         Object ret = Evaluation.of(expr, services);
+
+        if (ret instanceof LambdaResult) {
+            LambdaResult matches = (LambdaResult) ret;
+            final HashSet<CLEVRObject> retSet = new HashSet<>();
+            matches.forEach((tuple) -> retSet.add((CLEVRObject) tuple.get(0)));
+            ret = retSet;
+        }
+
         return new CLEVRAnswer(ret);
     }
 
@@ -133,6 +142,12 @@ public class CLEVRScene {
                 "(same_shape:<e,<e,t>> " +
                         "(unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> scene:<e,t> large:psi))" +
                         "(unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> scene:<e,t> small:psi)))"
+        ));
+
+        System.out.println(scene.evaluate(
+                "(union:<<e,t>,<<e,t>,<e,t>>> " +
+                        "(filter_size:<<e,t>,<psi,<e,t>>> scene:<e,t> large:psi)" +
+                        "(filter_size:<<e,t>,<psi,<e,t>>> scene:<e,t> small:psi))"
         ));
     }
 
