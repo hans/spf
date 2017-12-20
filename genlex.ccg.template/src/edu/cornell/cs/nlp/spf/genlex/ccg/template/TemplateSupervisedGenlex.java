@@ -36,6 +36,7 @@ import edu.cornell.cs.nlp.spf.genlex.ccg.ILexiconGenerator;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalConstant;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.GetConstantsSet;
+import edu.cornell.cs.nlp.spf.mr.lambda.visitor.IsTypeConsistent;
 import edu.cornell.cs.nlp.spf.parser.ccg.model.IModelImmutable;
 import edu.cornell.cs.nlp.spf.parser.ccg.model.IModelListener;
 import edu.cornell.cs.nlp.utils.collections.CollectionUtils;
@@ -58,13 +59,15 @@ public class TemplateSupervisedGenlex<SAMPLE extends Sentence, DI extends ILabel
 	private static final long			serialVersionUID	= 7983306766078896442L;
 
 	private final int					maxTokens;
+	private final boolean               typeConsistent;
 
 	private final GenerationRepository	repository			= new GenerationRepository();
 
 	public TemplateSupervisedGenlex(int maxTokens, boolean mark,
-			String origin) {
+			String origin, boolean typeConsistent) {
 		super(origin, mark);
 		this.maxTokens = maxTokens;
+		this.typeConsistent = typeConsistent;
 		LOG.info("Init %s: #templates=%d, maxTokens=%d",
 				getClass().getSimpleName(), repository.getTemplates().size(),
 				maxTokens);
@@ -81,8 +84,9 @@ public class TemplateSupervisedGenlex<SAMPLE extends Sentence, DI extends ILabel
 		CollectionUtils.filterInPlace(constants,
 				e -> FactoringServices.isFactorable(e));
 
-		return new FactoredLexicon(repository.setConstants(constants).generate(
-				dataItem.getSample().getTokens(), maxTokens, entryProperties),
+		return new FactoredLexicon(
+				repository.setConstants(constants).generate(
+						dataItem.getSample().getTokens(), maxTokens, entryProperties),
 				repository.getTemplates());
 	}
 
@@ -113,6 +117,15 @@ public class TemplateSupervisedGenlex<SAMPLE extends Sentence, DI extends ILabel
 	public void lexicalEntryAdded(LexicalEntry<LogicalExpression> entry) {
 		final LexicalTemplate template = FactoringServices.factor(entry)
 				.getTemplate();
+
+		if (typeConsistent) {
+			final LogicalExpression expr = template.getTemplateCategory().getSemantics();
+			if (!IsTypeConsistent.of(expr)) {
+				LOG.info("discarding type-inconsistent lexical template %s", template);
+				return;
+			}
+		}
+
 		if (repository.addTemplate(template)) {
 			LOG.info(
 					"Template supervised GENLEX: Added new template (-> %d): %s",
@@ -139,8 +152,9 @@ public class TemplateSupervisedGenlex<SAMPLE extends Sentence, DI extends ILabel
 				IResourceRepository repo) {
 			return new TemplateSupervisedGenlex<>(
 					Integer.valueOf(params.get("maxTokens")),
-					params.getAsBoolean("mark", false), params.get("origin",
-							ILexiconGenerator.GENLEX_LEXICAL_ORIGIN));
+					params.getAsBoolean("mark", false),
+					params.get("origin", ILexiconGenerator.GENLEX_LEXICAL_ORIGIN),
+			        params.getAsBoolean("typeConsistent", false));
 		}
 
 		@Override
@@ -160,6 +174,8 @@ public class TemplateSupervisedGenlex<SAMPLE extends Sentence, DI extends ILabel
 											+ ")")
 							.addParam("mark", Boolean.class,
 									"Mark generated entries (default: false)")
+					        .addParam("typeConsistent", Boolean.class,
+									"enforce type consistency in generated lexemes")
 							.build();
 		}
 
