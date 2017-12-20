@@ -2,6 +2,8 @@
 *.pyc
 run.*
 
+*.iml
+
 bin/
 dist/
 build/
