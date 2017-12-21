@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/ccg/ccg.iml" filepath="$PROJECT_DIR$/ccg/ccg.iml" />
       <module fileurl="file://$PROJECT_DIR$/ccg.lexicon/ccg.lexicon.iml" filepath="$PROJECT_DIR$/ccg.lexicon/ccg.lexicon.iml" />
       <module fileurl="file://$PROJECT_DIR$/ccg.lexicon.factored.lambda/ccg.lexicon.factored.lambda.iml" filepath="$PROJECT_DIR$/ccg.lexicon.factored.lambda/ccg.lexicon.factored.lambda.iml" />
+      <module fileurl="file://$PROJECT_DIR$/clevr_situated/clevr_situated.iml" filepath="$PROJECT_DIR$/clevr_situated/clevr_situated.iml" />
       <module fileurl="file://$PROJECT_DIR$/data/data.iml" filepath="$PROJECT_DIR$/data/data.iml" />
       <module fileurl="file://$PROJECT_DIR$/data.singlesentence/data.singlesentence.iml" filepath="$PROJECT_DIR$/data.singlesentence/data.singlesentence.iml" />
       <module fileurl="file://$PROJECT_DIR$/data.singlesentence.lex/data.singlesentence.lex.iml" filepath="$PROJECT_DIR$/data.singlesentence.lex/data.singlesentence.lex.iml" />

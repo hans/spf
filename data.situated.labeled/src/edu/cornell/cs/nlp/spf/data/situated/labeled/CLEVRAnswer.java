@@ -4,10 +4,28 @@ import java.util.Objects;
 
 public class CLEVRAnswer {
 
+    private static final CLEVRAnswer TRUE = new CLEVRAnswer(true);
+    private static final CLEVRAnswer FALSE = new CLEVRAnswer(false);
+
     private final Object answer;
 
     public CLEVRAnswer(Object answer) {
         this.answer = answer;
+    }
+
+    public static CLEVRAnswer valueOf(String expr) {
+        if (expr.equals("yes") || expr.equals("true")) {
+            return TRUE;
+        } else if (expr.equals("no") || expr.equals("false")) {
+            return FALSE;
+        }
+
+        try {
+            int ret = Integer.valueOf(expr);
+            return new CLEVRAnswer(ret);
+        } catch (NumberFormatException e) {
+            return new CLEVRAnswer(expr);
+        }
     }
 
     public boolean hasSameType(Object other) {
