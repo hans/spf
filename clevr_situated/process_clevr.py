@@ -1,12 +1,14 @@
 from collections import namedtuple
 from functools import reduce
+import json
 from pathlib import Path
 import re
 import sys
 
 
 SPLIT = "train"
-DATA_PATH = Path("/om/data/public/jgauthie/CLEVR_v1.0/questions_functionalized.%s.txt" % SPLIT)
+DATA_PATH = Path("/om/data/public/jgauthie/CLEVR_v1.0/questions/CLEVR_%s_questions.json" % SPLIT)
+OUT_PATH = Path("/om/user/jgauthie/clevros/data/CLEVR_v1.0/questions/CLEVR_%s_questions.sexpr.json" % SPLIT)
 
 PREDS_PATH = Path(__file__).parents[0] / "resources" / "geo.preds.ont"
 with PREDS_PATH.open("r") as f:
@@ -135,26 +137,36 @@ def finalize(sentence, sexpr):
   print()
 
 
+def convert_program_to_sexpr(program_struct):
+  """
+  Convert a CLEVR program struct into a sexpr string.
+  """
+  def inner(p):
+    if p["function"] == "scene":
+      return "scene"
+    ret = "(%s %s" % (p["function"],
+                      " ".join(inner(program_struct[x] for x in p["inputs"])))
+
+    if p["value_inputs"]:
+      ret += " " + " ".join(map(str, p["value_inputs"]))
+    ret += ")"
+    return ret
+
+  return inner(program_struct[-1])
+
+
 if __name__ == "__main__":
+  limit = int(sys.argv[1]) if len(sys.argv) > 1 else 5
   with DATA_PATH.open("r") as data_f:
-    limit = int(sys.argv[1]) if len(sys.argv) > 1 else 5
-    n = 0
+    data = json.load(data_f)
 
-    sentence, sexpr = None, None
-    for line in data_f:
-      if n == limit:
-        break
+    for i, question in enumerate(data["questions"]):
+      sentence = process_sentence(question["question"])
 
-      line = line.strip()
-      if sentence is not None and line.startswith("("):
-        sexpr = process_sexpr(line)
-        finalize(sentence, sexpr)
-        n += 1
+      # Convert program into a sexpr
+      sexpr = process_sexpr(convert_program_to_sexpr(question["program"]))
 
-        sentence, sexpr = None, None
-      elif sentence is None and line:
-        sentence = process_sentence(line)
-      elif not line:
-        continue
-      else:
-        raise ValueError("Unexpected line %r" % line)
+      question["program_sexpr"] = sexpr
+
+  with OUT_PATH.open("w") as out_f:
+    json.dump(data, out_f)
