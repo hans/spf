@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static edu.cornell.cs.nlp.spf.data.situated.labeled.CLEVRTypes.CLEVRRelation;
 
 class CLEVRSceneTest {
 
@@ -50,7 +51,23 @@ class CLEVRSceneTest {
         objects.add(smallObject);
         objects.add(largeObject);
 
-        scene = new CLEVRScene(0, objects, null);
+        // small object is in front of large object
+        Map<CLEVRRelation, Map<CLEVRObject, Set<CLEVRObject>>> relations = new HashMap<>();
+
+        Map<CLEVRObject, Set<CLEVRObject>> behindMap = new HashMap<>();
+        behindMap.put(largeObject, Collections.singleton(smallObject));
+        behindMap.put(smallObject, Collections.emptySet());
+        relations.put(CLEVRRelation.BEHIND, behindMap);
+
+        Map<CLEVRObject, Set<CLEVRObject>> frontMap = new HashMap<>();
+        frontMap.put(smallObject, Collections.singleton(largeObject));
+        frontMap.put(largeObject, Collections.emptySet());
+        relations.put(CLEVRRelation.FRONT, frontMap);
+
+        relations.put(CLEVRRelation.RIGHT, Collections.emptyMap());
+        relations.put(CLEVRRelation.LEFT, Collections.emptyMap());
+
+        scene = new CLEVRScene(0, objects, relations);
     }
 
     @AfterEach
@@ -58,16 +75,10 @@ class CLEVRSceneTest {
         LogicLanguageServices.setInstance(null);
     }
 
-    private <T> Set<T> setOf(T... args) {
-        Set<T> ret = new HashSet<>();
-        Collections.addAll(ret, args);
-        return ret;
-    }
-
     @Test
     void testEvaluateFilter() {
         assertEquals(
-                new CLEVRAnswer(setOf(largeObject)),
+                new CLEVRAnswer(Collections.singleton(largeObject)),
                 scene.evaluate(
                         "(filter_material:<<e,t>,<pm,<e,t>>> scene:<e,t> rubber:pm)")
         );
@@ -158,7 +169,15 @@ class CLEVRSceneTest {
 
     @Test
     void testEvaluateRelate() {
-        assertTrue(false); // TODO
+        assertEquals(
+                new CLEVRAnswer(Collections.singleton(smallObject)),
+                scene.evaluate(
+                        "(relate:<e,<s,<e,t>>> " +
+                                "(unique:<<e,t>,e> " +
+                                "(filter_size:<<e,t>,<psi,<e,t>>> scene:<e,t> large:psi))" +
+                                "front:s)"
+                )
+        );
     }
 
     @Test

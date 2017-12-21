@@ -1,20 +1,15 @@
 package edu.cornell.cs.nlp.spf.data.situated.labeled;
 
-import edu.cornell.cs.nlp.spf.mr.lambda.FlexibleTypeComparator;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicLanguageServices;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
 import edu.cornell.cs.nlp.spf.mr.lambda.exec.naive.Evaluation;
 import edu.cornell.cs.nlp.spf.mr.lambda.exec.naive.LambdaResult;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.Simplify;
-import edu.cornell.cs.nlp.spf.mr.language.type.TypeRepository;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
-import static edu.cornell.cs.nlp.spf.data.situated.labeled.CLEVRTypes.*;
+import static edu.cornell.cs.nlp.spf.data.situated.labeled.CLEVRTypes.CLEVRRelation;
 
 public class CLEVRScene {
 
@@ -104,5 +99,15 @@ public class CLEVRScene {
 
     public Map<CLEVRRelation, Map<CLEVRObject, Set<CLEVRObject>>> getRelations() {
         return relations;
+    }
+
+    public boolean hasRelation(CLEVRObject obj1, CLEVRObject obj2, CLEVRRelation relation) {
+        if (!objects.contains(obj1) || !objects.contains(obj2))
+            throw new RuntimeException("one or both of requested objects are not part of this scene");
+
+        Map<CLEVRObject, Set<CLEVRObject>> relMap = relations.get(relation);
+        if (!relMap.containsKey(obj1))
+            return false;
+        return relMap.get(obj1).contains(obj2);
     }
 }

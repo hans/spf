@@ -19,6 +19,7 @@ public class CLEVREvaluationServices extends AbstractEvaluationServices<CLEVRSce
 
     private final Map<String, String> propertyLiterals = new HashMap<>();
     private final Map<String, Function<CLEVRObject, Boolean>> setLiterals = new HashMap<>();
+    private final Map<String, CLEVRRelation> relationLiterals = new HashMap<>();
 
     private final Map<String, Function<LambdaResult, CLEVRObject>> fetchFunctions = new HashMap<>();
     private final Map<String, BiFunction<Pair<LambdaResult, LambdaResult>, CLEVRObject, Boolean>> setOpFunctions = new HashMap<>();
@@ -28,15 +29,31 @@ public class CLEVREvaluationServices extends AbstractEvaluationServices<CLEVRSce
     private final Map<String, BiFunction<String, String, Boolean>> equalFunctions = new HashMap<>();
     private final Map<String, Function<LambdaResult, Object>> reductionFunctions = new HashMap<>();
     private final Map<String, BiFunction<Integer, Integer, Boolean>> relationFunctions = new HashMap<>();
+    private final Map<String, BiFunction<Pair<CLEVRObject, CLEVRRelation>, CLEVRObject, Boolean>> spatialRelationFunctions = new HashMap<>();
 
-    {
+    private void seedLiteralsForProperty(String propertyName, String[] vals) {
+        for (String val : vals) {
+            // define literals like cylinder:psh
+            propertyLiterals.put(val.toLowerCase(), val);
+
+            // define literals like cylinder:<e,t>
+            setLiterals.put(val.toLowerCase(),
+                    (obj) -> obj.getAttribute(propertyName).equals(val));
+        }
+    }
+
+    public CLEVREvaluationServices(CLEVRScene scene) {
+        this.scene = scene;
+
+        // Prepare literal maps.
+
         CLEVRTypes.PROPERTIES.forEach((name, vals) -> {
             seedLiteralsForProperty(name, vals);
 
             filterFunctions.put("filter_" + name, (obj, val) -> obj.getAttribute(name).equals(val));
             queryFunctions.put("query_" + name, (obj) -> obj.getAttribute(name));
             sameFunctions.put("same_" + name, (obj1, obj2) ->
-                obj1.getAttribute(name).equals(obj2.getAttribute(name))
+                    obj1.getAttribute(name).equals(obj2.getAttribute(name))
             );
             equalFunctions.put("equal_" + name, Object::equals);
         });
@@ -59,21 +76,11 @@ public class CLEVREvaluationServices extends AbstractEvaluationServices<CLEVRSce
 
         relationFunctions.put("greater_than", (i1, i2) -> i1 > i2);
         relationFunctions.put("less_than", (i1, i2) -> i1 < i2);
-    }
 
-    private void seedLiteralsForProperty(String propertyName, String[] vals) {
-        for (String val : vals) {
-            // define literals like cylinder:psh
-            propertyLiterals.put(val.toLowerCase(), val);
-
-            // define literals like cylinder:<e,t>
-            setLiterals.put(val.toLowerCase(),
-                    (obj) -> obj.getAttribute(propertyName).equals(val));
-        }
-    }
-
-    public CLEVREvaluationServices(CLEVRScene scene) {
-        this.scene = scene;
+        spatialRelationFunctions.put("relate", (pair, candidate) ->
+                scene.hasRelation(pair.first(), candidate, pair.second()));
+        for (CLEVRRelation reln : CLEVRRelation.values())
+            relationLiterals.put(reln.toString().toLowerCase(), reln);
     }
 
     private void arityCheck(String predicate, int expected, Object[] args) {
@@ -114,6 +121,9 @@ public class CLEVREvaluationServices extends AbstractEvaluationServices<CLEVRSce
             return reductionFunctions.get(predicateName).apply((LambdaResult) args[0]);
         } else if (relationFunctions.containsKey(predicateName)) {
             return relationFunctions.get(predicateName).apply((Integer) args[0], (Integer) args[1]);
+        } else if (spatialRelationFunctions.containsKey(predicateName)) {
+            return spatialRelationFunctions.get(predicateName).apply(
+                    Pair.of((CLEVRObject) args[2], (CLEVRRelation) args[1]), (CLEVRObject) args[0]);
         } else {
             throw new RuntimeException("unrecognized literal " + predicateName + " in " + predicate.toString());
         }
@@ -128,6 +138,8 @@ public class CLEVREvaluationServices extends AbstractEvaluationServices<CLEVRSce
         String name = logicalConstant.getBaseName();
         if (propertyLiterals.containsKey(name)) {
             return propertyLiterals.get(name);
+        } else if (relationLiterals.containsKey(name)) {
+            return relationLiterals.get(name);
         } else {
             throw new RuntimeException("unrecognized constant " + logicalConstant.toString());
         }
