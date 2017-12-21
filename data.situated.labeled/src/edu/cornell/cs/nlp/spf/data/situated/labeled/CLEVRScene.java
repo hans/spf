@@ -88,7 +88,7 @@ public class CLEVRScene {
         return new CLEVRAnswer(ret);
     }
 
-    private Object evaluate(String exprString) {
+    public Object evaluate(String exprString) {
         LogicalExpression expr = Simplify.of(LogicalExpression.read(exprString));
         return evaluate(expr);
     }
@@ -103,52 +103,6 @@ public class CLEVRScene {
 
     public Map<CLEVRRelation, List<List<CLEVRObject>>> getRelations() {
         return relations;
-    }
-
-
-    public static void main(String[] args) {
-        final File typesFile = new File("clevr_basic/resources/geo.types");
-
-        List<File> ontFiles = new ArrayList<>();
-        ontFiles.add(new File("clevr_basic/resources/geo.preds.ont"));
-        ontFiles.add(new File("clevr_basic/resources/geo.consts.ont"));
-
-        try {
-            LogicLanguageServices.setInstance(
-                    new LogicLanguageServices.Builder(
-                            new TypeRepository(typesFile),
-                            new FlexibleTypeComparator())
-                            .setNumeralTypeName("i").setUseOntology(true)
-                            .addConstantsToOntology(ontFiles).closeOntology(true)
-                            .build()
-            );
-        } catch (final IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        Set<CLEVRObject> objects = new HashSet<>();
-        objects.add(new CLEVRObject("black", "large", "cylinder", "metal",
-                0, 0, 0, 0));
-        objects.add(new CLEVRObject("green", "small", "cylinder", "metal",
-                0, 0, 0, 0));
-
-        CLEVRScene scene = new CLEVRScene(0, objects, null);
-
-        System.out.println(scene.evaluate(
-                "(query_material:<e,pm> (unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> scene:<e,t> large:psi)))"
-        ));
-
-        System.out.println(scene.evaluate(
-                "(same_shape:<e,<e,t>> " +
-                        "(unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> scene:<e,t> large:psi))" +
-                        "(unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> scene:<e,t> small:psi)))"
-        ));
-
-        System.out.println(scene.evaluate(
-                "(union:<<e,t>,<<e,t>,<e,t>>> " +
-                        "(filter_size:<<e,t>,<psi,<e,t>>> scene:<e,t> large:psi)" +
-                        "(filter_size:<<e,t>,<psi,<e,t>>> scene:<e,t> small:psi))"
-        ));
     }
 
 }
