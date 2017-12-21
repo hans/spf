@@ -25,6 +25,9 @@ public class CLEVREvaluationServices extends AbstractEvaluationServices<CLEVRSce
     private final Map<String, BiFunction<CLEVRObject, String, Boolean>> filterFunctions = new HashMap<>();
     private final Map<String, Function<CLEVRObject, String>> queryFunctions = new HashMap<>();
     private final Map<String, BiFunction<CLEVRObject, CLEVRObject, Boolean>> sameFunctions = new HashMap<>();
+    private final Map<String, BiFunction<String, String, Boolean>> equalFunctions = new HashMap<>();
+    private final Map<String, Function<LambdaResult, Object>> reductionFunctions = new HashMap<>();
+    private final Map<String, BiFunction<Integer, Integer, Boolean>> relationFunctions = new HashMap<>();
 
     {
         CLEVRTypes.PROPERTIES.forEach((name, vals) -> {
@@ -35,6 +38,7 @@ public class CLEVREvaluationServices extends AbstractEvaluationServices<CLEVRSce
             sameFunctions.put("same_" + name, (obj1, obj2) ->
                 obj1.getAttribute(name).equals(obj2.getAttribute(name))
             );
+            equalFunctions.put("equal_" + name, Object::equals);
         });
 
         setLiterals.put("scene", (x) -> true);
@@ -49,6 +53,12 @@ public class CLEVREvaluationServices extends AbstractEvaluationServices<CLEVRSce
                 (lrs, obj) -> lrs.first().hasTupleWithKey(obj) || lrs.second().hasTupleWithKey(obj));
         setOpFunctions.put("intersection",
                 (lrs, obj) -> lrs.first().hasTupleWithKey(obj) && lrs.second().hasTupleWithKey(obj));
+
+        reductionFunctions.put("exists", (lr) -> lr.size() != 0);
+        reductionFunctions.put("count", LambdaResult::size);
+
+        relationFunctions.put("greater_than", (i1, i2) -> i1 > i2);
+        relationFunctions.put("less_than", (i1, i2) -> i1 < i2);
     }
 
     private void seedLiteralsForProperty(String propertyName, String[] vals) {
@@ -98,6 +108,12 @@ public class CLEVREvaluationServices extends AbstractEvaluationServices<CLEVRSce
             return queryFunctions.get(predicateName).apply((CLEVRObject) args[0]);
         } else if (sameFunctions.containsKey(predicateName)) {
             return sameFunctions.get(predicateName).apply((CLEVRObject) args[0], (CLEVRObject) args[1]);
+        } else if (equalFunctions.containsKey(predicateName)) {
+            return equalFunctions.get(predicateName).apply((String) args[0], (String) args[1]);
+        } else if (reductionFunctions.containsKey(predicateName)) {
+            return reductionFunctions.get(predicateName).apply((LambdaResult) args[0]);
+        } else if (relationFunctions.containsKey(predicateName)) {
+            return relationFunctions.get(predicateName).apply((Integer) args[0], (Integer) args[1]);
         } else {
             throw new RuntimeException("unrecognized literal " + predicateName + " in " + predicate.toString());
         }

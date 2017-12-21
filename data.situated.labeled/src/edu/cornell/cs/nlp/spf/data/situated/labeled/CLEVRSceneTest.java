@@ -41,7 +41,7 @@ class CLEVRSceneTest {
             throw new RuntimeException(e);
         }
 
-        smallObject = new CLEVRObject("black", "small", "cylinder", "metal",
+        smallObject = new CLEVRObject("red", "small", "cylinder", "metal",
                 0, 0, 0, 0);
         largeObject = new CLEVRObject("green", "large", "cylinder", "rubber",
                 0, 0, 0, 0);
@@ -113,6 +113,62 @@ class CLEVRSceneTest {
                         "(union:<<e,t>,<<e,t>,<e,t>>> " +
                                 "(filter_size:<<e,t>,<psi,<e,t>>> scene:<e,t> large:psi)" +
                                 "(filter_size:<<e,t>,<psi,<e,t>>> scene:<e,t> small:psi))"
+                )
+        );
+    }
+
+    @Test
+    void testEvaluateExist() {
+        assertEquals(
+                new CLEVRAnswer(true),
+                scene.evaluate(
+                        "(exists:<<e,t>,t> (filter_color:<<e,t>,<pc,<e,t>>> scene:<e,t> red:pc)))"
+                )
+        );
+
+        assertEquals(
+                new CLEVRAnswer(false),
+                scene.evaluate(
+                        "(exists:<<e,t>,t> (filter_color:<<e,t>,<pc,<e,t>>> scene:<e,t> blue:pc)))"
+                )
+        );
+    }
+
+    @Test
+    void testEvaluateCount() {
+        assertEquals(
+                new CLEVRAnswer(2),
+                scene.evaluate(
+                        "(count:<<e,t>,i> (filter_shape:<<e,t>,<psh,<e,t>>> scene:<e,t> cylinder:psh)))"
+                )
+        );
+    }
+
+    @Test
+    void testEvaluateGreaterThan() {
+        assertEquals(
+                new CLEVRAnswer(true),
+                scene.evaluate(
+                        "(greater_than:<i,<i,t>> " +
+                                "(count:<<e,t>,i> (filter_shape:<<e,t>,<psh,<e,t>>> scene:<e,t> cylinder:psh)))" +
+                                "(count:<<e,t>,i> (filter_size:<<e,t>,<psi,<e,t>>> scene:<e,t> large:psi))))"
+                )
+        );
+    }
+
+    @Test
+    void testEvaluateRelate() {
+        assertTrue(false); // TODO
+    }
+
+    @Test
+    void testEvaluateEqual() {
+        assertEquals(
+                new CLEVRAnswer(true),
+                scene.evaluate(
+                        "(equal_shape:<psh,<psh,t>> " +
+                                "(query_shape:<e,psh> (unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> scene:<e,t> small:psi)))" +
+                                "(query_shape:<e,psh> (unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> scene:<e,t> large:psi))))"
                 )
         );
     }
