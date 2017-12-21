@@ -23,7 +23,7 @@ public class CLEVREvaluationServices extends AbstractEvaluationServices<CLEVRSce
 
     private final Map<String, Function<LambdaResult, CLEVRObject>> fetchFunctions = new HashMap<>();
     private final Map<String, BiFunction<Pair<LambdaResult, LambdaResult>, CLEVRObject, Boolean>> setOpFunctions = new HashMap<>();
-    private final Map<String, BiFunction<CLEVRObject, String, Boolean>> filterFunctions = new HashMap<>();
+    private final Map<String, BiFunction<Pair<LambdaResult, String>, CLEVRObject, Boolean>> filterFunctions = new HashMap<>();
     private final Map<String, Function<CLEVRObject, String>> queryFunctions = new HashMap<>();
     private final Map<String, BiFunction<CLEVRObject, CLEVRObject, Boolean>> sameFunctions = new HashMap<>();
     private final Map<String, BiFunction<String, String, Boolean>> equalFunctions = new HashMap<>();
@@ -50,7 +50,8 @@ public class CLEVREvaluationServices extends AbstractEvaluationServices<CLEVRSce
         CLEVRTypes.PROPERTIES.forEach((name, vals) -> {
             seedLiteralsForProperty(name, vals);
 
-            filterFunctions.put("filter_" + name, (obj, val) -> obj.getAttribute(name).equals(val));
+            filterFunctions.put("filter_" + name, (pair, obj) ->
+                    pair.first().hasTupleWithKey(obj) && obj.getAttribute(name).equals(pair.second()));
             queryFunctions.put("query_" + name, (obj) -> obj.getAttribute(name));
             sameFunctions.put("same_" + name, (obj1, obj2) ->
                     obj1.getAttribute(name).equals(obj2.getAttribute(name))
@@ -101,9 +102,8 @@ public class CLEVREvaluationServices extends AbstractEvaluationServices<CLEVRSce
         } else if (filterFunctions.containsKey(predicateName)) {
             //arityCheck(predicateName, 2, args);
             return filterFunctions.get(predicateName).apply(
-                    (CLEVRObject) args[2],
-                    (String) args[1]
-            );
+                    Pair.of((LambdaResult) args[0], (String) args[1]),
+                    (CLEVRObject) args[2]);
         } else if (setOpFunctions.containsKey(predicateName)) {
             return setOpFunctions.get(predicateName).apply(
                     Pair.of((LambdaResult) args[0], (LambdaResult) args[1]),
@@ -123,7 +123,7 @@ public class CLEVREvaluationServices extends AbstractEvaluationServices<CLEVRSce
             return relationFunctions.get(predicateName).apply((Integer) args[0], (Integer) args[1]);
         } else if (spatialRelationFunctions.containsKey(predicateName)) {
             return spatialRelationFunctions.get(predicateName).apply(
-                    Pair.of((CLEVRObject) args[2], (CLEVRRelation) args[1]), (CLEVRObject) args[0]);
+                    Pair.of((CLEVRObject) args[0], (CLEVRRelation) args[1]), (CLEVRObject) args[2]);
         } else {
             throw new RuntimeException("unrecognized literal " + predicateName + " in " + predicate.toString());
         }
