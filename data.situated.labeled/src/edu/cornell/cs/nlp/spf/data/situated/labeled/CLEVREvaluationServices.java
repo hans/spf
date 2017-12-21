@@ -123,7 +123,7 @@ public class CLEVREvaluationServices extends AbstractEvaluationServices<CLEVRSce
             return relationFunctions.get(predicateName).apply((Integer) args[0], (Integer) args[1]);
         } else if (spatialRelationFunctions.containsKey(predicateName)) {
             return spatialRelationFunctions.get(predicateName).apply(
-                    Pair.of((CLEVRObject) args[0], (CLEVRRelation) args[1]), (CLEVRObject) args[2]);
+                    Pair.of((CLEVRObject) args[2], (CLEVRRelation) args[1]), (CLEVRObject) args[0]);
         } else {
             throw new RuntimeException("unrecognized literal " + predicateName + " in " + predicate.toString());
         }

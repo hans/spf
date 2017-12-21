@@ -198,12 +198,16 @@ class CLEVRSceneTest {
 
     @Test
     void testEvaluateRelate() {
+        Set<CLEVRObject> expected = new HashSet<>();
+        expected.add(smallObject);
+        expected.add(thirdObject);
+
         assertEquals(
-                new CLEVRAnswer(Collections.singleton(smallObject)),
+                new CLEVRAnswer(expected),
                 scene.evaluate(
                         "(relate:<e,<s,<e,t>>> " +
                                 "(unique:<<e,t>,e> " +
-                                "(filter_size:<<e,t>,<psi,<e,t>>> scene:<e,t> large:psi))" +
+                                "(filter_color:<<e,t>,<pc,<e,t>>> scene:<e,t> blue:pc))" +
                                 "front:s)"
                 )
         );
