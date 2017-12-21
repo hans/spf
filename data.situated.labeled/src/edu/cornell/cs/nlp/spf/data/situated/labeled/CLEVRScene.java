@@ -20,9 +20,10 @@ public class CLEVRScene {
 
     private final int imageIndex;
     private final Set<CLEVRObject> objects;
-    private final Map<CLEVRRelation, List<List<CLEVRObject>>> relations;
+    private final Map<CLEVRRelation, Map<CLEVRObject, Set<CLEVRObject>>> relations;
 
-    public CLEVRScene(int imageIndex, Set<CLEVRObject> objects, Map<CLEVRRelation, List<List<CLEVRObject>>> relations) {
+    public CLEVRScene(int imageIndex, Set<CLEVRObject> objects,
+                      Map<CLEVRRelation, Map<CLEVRObject, Set<CLEVRObject>>> relations) {
         this.imageIndex = imageIndex;
         this.objects = objects;
         this.relations = relations;
@@ -30,7 +31,7 @@ public class CLEVRScene {
 
     public static CLEVRScene buildFromJSON(JSONObject scene) {
         List<CLEVRObject> objects = new ArrayList<>();
-        Map<CLEVRRelation, List<List<CLEVRObject>>> relations = new HashMap<>();
+        Map<CLEVRRelation, Map<CLEVRObject, Set<CLEVRObject>>> relations = new HashMap<>();
 
         for (Object obj : (JSONArray) scene.get("objects")) {
             JSONObject obj_ = (JSONObject) obj;
@@ -49,16 +50,16 @@ public class CLEVRScene {
         JSONObject relationships = (JSONObject) scene.get("relationships");
         for (CLEVRRelation relation : CLEVRRelation.values()) {
             JSONArray allIdxs = (JSONArray) relationships.get(relation.toString().toLowerCase());
-            List<List<CLEVRObject>> allInstances = new ArrayList<>();
+            Map<CLEVRObject, Set<CLEVRObject>> allInstances = new HashMap<>();
 
             for (int i = 0; i < allIdxs.size(); i++) {
                 JSONArray idxs = (JSONArray) allIdxs.get(i);
-                List<CLEVRObject> objRelations = new ArrayList<>();
+                Set<CLEVRObject> objRelations = new HashSet<>();
                 for (Object idx : idxs) {
                     objRelations.add(objects.get((int) idx));
                 }
 
-                allInstances.add(objRelations);
+                allInstances.put(objects.get(i), objRelations);
             }
 
             relations.put(relation, allInstances);
@@ -101,8 +102,7 @@ public class CLEVRScene {
         return objects;
     }
 
-    public Map<CLEVRRelation, List<List<CLEVRObject>>> getRelations() {
+    public Map<CLEVRRelation, Map<CLEVRObject, Set<CLEVRObject>>> getRelations() {
         return relations;
     }
-
 }
