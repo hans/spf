@@ -6,5 +6,7 @@ nplist=../../../resources/np-list.lex
 gBeam=50
 lexbeam=100
 gIter=5
+expThreads=10
+gParserThreads=1
 wordSkippingCost=-1.0
 trainingMaxSentenceLength=50
