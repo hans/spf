@@ -4,14 +4,15 @@ import edu.cornell.cs.nlp.spf.mr.lambda.FlexibleTypeComparator;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicLanguageServices;
 import edu.cornell.cs.nlp.spf.mr.language.type.TypeRepository;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static edu.cornell.cs.nlp.spf.data.situated.labeled.CLEVRTypes.CLEVRRelation;
+import static org.junit.jupiter.api.Assertions.*;
 
 class CLEVRSceneTest {
 
@@ -22,7 +23,7 @@ class CLEVRSceneTest {
 
     private CLEVRScene scene;
 
-    @org.junit.jupiter.api.BeforeEach
+    @BeforeEach
     void setUp() {
         final File typesFile = new File("../clevr_basic/resources/geo.types");
 
