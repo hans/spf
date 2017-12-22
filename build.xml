@@ -66,6 +66,8 @@
 			<fileset dir="${src.parser.ccg.rules.coordination}" includes="**/*.java" />
 			<fileset dir="${src.parser.ccg.rules.coordination.lambda}" includes="**/*.java" />
 			<fileset dir="${src.spfdist}" includes="**/*.java" />
+
+			<fileset dir="${src.clevr_basic}" includes="**/*.java" />
 		</copy>
 	</target>
 
@@ -96,7 +98,7 @@
 			<fileset dir="${spfbase}" includes="resources/*" />
 			<zipgroupfileset dir="${lib}" includes="*.jar" />
 		</jar>
-		
+
 		<delete file="MANIFEST.MF" />
 	</target>
 
@@ -112,7 +114,7 @@
 			<fileset dir="${build}" />
 			<fileset dir="${build.src}" />
 		</jar>
-		
+
 		<delete file="MANIFEST.MF" />
 	</target>
 
