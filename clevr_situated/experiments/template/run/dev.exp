@@ -13,9 +13,8 @@ include=../../validation.inc
 include=../genlex.inc
 # Training and testing sets
 include=../data.inc
-#type=data.composite id=train sets=fold1,fold2,fold3,fold4,fold5,fold6,fold7,fold8,fold9
-type=data.composite id=train sets=manual
-type=data.composite id=test sets=manual
+type=data.composite id=train sets=clevrDev
+type=data.composite id=test sets=clevrDev
 # Learner and tester
 include=../learn.inc
 # Initializars
