@@ -144,8 +144,8 @@ def convert_program_to_sexpr(program_struct):
   def inner(p):
     if p["function"] == "scene":
       return "scene"
-    ret = "(%s %s" % (p["function"],
-                      " ".join(inner(program_struct[x] for x in p["inputs"])))
+    ret = "(%s %s" % ("exist_" if p["function"] == "exist" else p["function"],
+                      " ".join(inner(program_struct[x]) for x in p["inputs"]))
 
     if p["value_inputs"]:
       ret += " " + " ".join(map(str, p["value_inputs"]))
