@@ -1,6 +1,6 @@
 include=../../params.inc
-outputDir=/om/scratch/Fri/jgauthie/logs_dev
-globalLog=/om/scratch/Fri/jgauthie/logs_dev/global.log
+outputDir=../../out/logs_dev
+globalLog=../../out/logs_dev/global.log
 
 # Resources
 # Parser
@@ -12,7 +12,7 @@ include=../../validation.inc
 # Lexical generator
 include=../genlex.inc
 # Training and testing sets
-include=data.inc
+include=../data.inc
 #type=data.composite id=train sets=fold1,fold2,fold3,fold4,fold5,fold6,fold7,fold8,fold9
 type=data.composite id=train sets=manual
 type=data.composite id=test sets=manual
