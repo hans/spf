@@ -27,6 +27,7 @@ import edu.cornell.cs.nlp.spf.data.situated.sentence.SituatedSentenceCollection;
 import edu.cornell.cs.nlp.spf.data.utils.LabeledValidator;
 import edu.cornell.cs.nlp.spf.explat.resources.ResourceCreatorRepository;
 import edu.cornell.cs.nlp.spf.genlex.ccg.template.TemplateSupervisedGenlex;
+import edu.cornell.cs.nlp.spf.genlex.ccg.template.coarse.TemplateCoarseGenlex;
 import edu.cornell.cs.nlp.spf.genlex.ccg.unification.UnificationGenlex;
 import edu.cornell.cs.nlp.spf.genlex.ccg.unification.UnificationModelInit;
 import edu.cornell.cs.nlp.spf.genlex.ccg.unification.split.Splitter;
@@ -89,8 +90,7 @@ public class CLEVRResourceRepo extends ResourceCreatorRepository {
 		registerResourceCreator(
 				new LogicalExpressionCoordinationFeatureSet.Creator<Sentence>());
 		registerResourceCreator(new FactoredLexicon.Creator());
-		registerResourceCreator(
-				new TemplateSupervisedGenlex.Creator<Sentence, SingleSentence>());
+		registerResourceCreator(new TemplateCoarseGenlex.Creator<Sentence>());
 		registerResourceCreator(new SingleSentenceCollection.Creator());
 		registerResourceCreator(new CLEVRCollection.Creator());
 		registerResourceCreator(
