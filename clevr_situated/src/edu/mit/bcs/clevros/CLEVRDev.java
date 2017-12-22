@@ -22,9 +22,9 @@ import java.io.IOException;
 public class CLEVRDev {
 	
 	public static void main(String[] args) {
-		run("experiments/template/dev.cross/dev.fold0.exp");
+		run("experiments/template/run/dev.exp");
 	}
-	
+
 	public static void run(String filename) {
 		try {
 			new SituatedCLEVRExperiment(new File(filename)).start();
