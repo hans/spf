@@ -68,6 +68,7 @@
 			<fileset dir="${src.spfdist}" includes="**/*.java" />
 
 			<fileset dir="${src.clevr_basic}" includes="**/*.java" />
+			<fileset dir="${src.clevr_situated}" includes="**/*.java" />
 		</copy>
 	</target>
 
