@@ -10,6 +10,6 @@ type=nf.eisner id=nfValidator
 # Parse filter
 type=parsefilter.lambda.simple id=parseFilter syntax=S
 # CKY Parser
-type=parser.cky.multi id=parser parseFilter=parseFilter beam=%{gBeam} preChartPruning=true pruneLexicalCells=true rules=ruleComp,ruleApp,ruleRaiseComp,ruleThatless,rulePluralExists executor=executor nfValidator=nfValidator wordSkipping=simple threads=10
+type=parser.cky.multi id=parser parseFilter=parseFilter beam=%{gBeam} preChartPruning=true pruneLexicalCells=true rules=ruleComp,ruleApp,ruleRaiseComp,ruleThatless,rulePluralExists executor=executor nfValidator=nfValidator wordSkipping=simple threads=%{gThreads}
 # Parsing filter
 type=parser.filter.supervised id=filterFactory

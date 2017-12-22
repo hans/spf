@@ -5,5 +5,6 @@ seedlex=../../../resources/seed.lex
 gBeam=50
 lexbeam=100
 gIter=5
+gThreads=10
 wordSkippingCost=-1.0
 trainingMaxSentenceLength=50
