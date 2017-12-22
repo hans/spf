@@ -22,7 +22,10 @@ import edu.cornell.cs.nlp.spf.data.sentence.Sentence;
 import edu.cornell.cs.nlp.spf.data.sentence.SentenceLengthFilter;
 import edu.cornell.cs.nlp.spf.data.singlesentence.SingleSentence;
 import edu.cornell.cs.nlp.spf.data.singlesentence.SingleSentenceCollection;
+import edu.cornell.cs.nlp.spf.data.situated.labeled.CLEVRAnswer;
 import edu.cornell.cs.nlp.spf.data.situated.labeled.CLEVRScene;
+import edu.cornell.cs.nlp.spf.data.situated.labeled.LabeledSituatedSentence;
+import edu.cornell.cs.nlp.spf.data.situated.sentence.SituatedSentence;
 import edu.cornell.cs.nlp.spf.data.situated.sentence.SituatedSentenceCollection;
 import edu.cornell.cs.nlp.spf.data.utils.LabeledValidator;
 import edu.cornell.cs.nlp.spf.explat.resources.ResourceCreatorRepository;
@@ -90,7 +93,7 @@ public class CLEVRResourceRepo extends ResourceCreatorRepository {
 		registerResourceCreator(
 				new LogicalExpressionCoordinationFeatureSet.Creator<Sentence>());
 		registerResourceCreator(new FactoredLexicon.Creator());
-		registerResourceCreator(new TemplateCoarseGenlex.Creator<Sentence>());
+		registerResourceCreator(new TemplateCoarseGenlex.Creator<SituatedSentence<CLEVRScene>>());
 		registerResourceCreator(new SingleSentenceCollection.Creator());
 		registerResourceCreator(new CLEVRCollection.Creator());
 		registerResourceCreator(
