@@ -51,7 +51,7 @@ public class CLEVRScene {
                 JSONArray idxs = (JSONArray) allIdxs.get(i);
                 Set<CLEVRObject> objRelations = new HashSet<>();
                 for (Object idx : idxs) {
-                    objRelations.add(objects.get((int) idx));
+                    objRelations.add(objects.get(((Long) idx).intValue()));
                 }
 
                 allInstances.put(objects.get(i), objRelations);
@@ -64,7 +64,7 @@ public class CLEVRScene {
         Set<CLEVRObject> objectsSet = new HashSet<>(objects);
 
         return new CLEVRScene(
-                (int) scene.get("image_index"),
+                ((Long) scene.get("image_index")).intValue(),
                 objectsSet,
                 relations
         );

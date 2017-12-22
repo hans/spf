@@ -58,11 +58,11 @@ public class CLEVRCollection
             // Read questions file.
             curFile = questionsFile;
             JSONObject questionsObj = (JSONObject) new JSONParser()
-                    .parse(new FileReader(scenesFile));
+                    .parse(new FileReader(questionsFile));
             JSONArray allQuestions = (JSONArray) questionsObj.get("questions");
             for (Object questionData : allQuestions) {
                 JSONObject questionObj = (JSONObject) questionData;
-                CLEVRScene scene = scenes.get((int) questionObj.get("image_index"));
+                CLEVRScene scene = scenes.get(((Long) questionObj.get("image_index")).intValue());
 
                 // TODO custom tokenizer? e.g. for semicolons
                 Sentence sentence = new Sentence((String) questionObj.get("question"));
