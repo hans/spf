@@ -1,2 +1,2 @@
 ## GENLEX method
-type=genlex.template.supervised id=genlex maxTokens=2
+type=genlex.template.coarse id=genlex maxTokens=2 ontology=ontology parser=parser beam=%{gBeam}
