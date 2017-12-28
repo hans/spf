@@ -16,23 +16,14 @@
  *******************************************************************************/
 package edu.cornell.cs.nlp.spf.genlex.ccg.template.coarse;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
 import edu.cornell.cs.nlp.spf.base.token.TokenSeq;
 import edu.cornell.cs.nlp.spf.ccg.categories.Category;
 import edu.cornell.cs.nlp.spf.ccg.categories.ICategoryServices;
 import edu.cornell.cs.nlp.spf.ccg.lexicon.ILexicon;
 import edu.cornell.cs.nlp.spf.ccg.lexicon.LexicalEntry;
 import edu.cornell.cs.nlp.spf.ccg.lexicon.Lexicon;
-import edu.cornell.cs.nlp.spf.ccg.lexicon.factored.lambda.FactoredLexicalEntry;
-import edu.cornell.cs.nlp.spf.ccg.lexicon.factored.lambda.FactoredLexicon;
-import edu.cornell.cs.nlp.spf.ccg.lexicon.factored.lambda.FactoringServices;
-import edu.cornell.cs.nlp.spf.ccg.lexicon.factored.lambda.Lexeme;
-import edu.cornell.cs.nlp.spf.ccg.lexicon.factored.lambda.LexicalTemplate;
+import edu.cornell.cs.nlp.spf.ccg.lexicon.factored.lambda.*;
+import edu.cornell.cs.nlp.spf.data.ILabeledDataItem;
 import edu.cornell.cs.nlp.spf.data.sentence.Sentence;
 import edu.cornell.cs.nlp.spf.explat.IResourceRepository;
 import edu.cornell.cs.nlp.spf.explat.ParameterizedExperiment.Parameters;
@@ -55,6 +46,8 @@ import edu.cornell.cs.nlp.utils.composites.Triplet;
 import edu.cornell.cs.nlp.utils.log.ILogger;
 import edu.cornell.cs.nlp.utils.log.LoggerFactory;
 
+import java.util.*;
+
 /**
  * Lexicon generator that uses coarse ontology to prune the space of potential
  * new lexical entries. To do so, the generator first parses the current
@@ -69,13 +62,11 @@ import edu.cornell.cs.nlp.utils.log.LoggerFactory;
  * @param <DI>
  *            Data item for generation.
  */
-public class TemplateCoarseGenlex<DI extends Sentence> extends
-		AbstractLexiconGenerator<DI, LogicalExpression, IModelImmutable<Sentence, LogicalExpression>>
+public class SituatedTemplateCoarseGenlex<SAMPLE extends Sentence, DI extends ILabeledDataItem<SAMPLE, ?>>
+		extends AbstractLexiconGenerator<DI, LogicalExpression, IModelImmutable<Sentence, LogicalExpression>>
 		implements IModelListener<LogicalExpression> {
 	public static final ILogger							LOG					= LoggerFactory
-			.create(TemplateCoarseGenlex.class);
-
-	private static final long							serialVersionUID	= 5314829683858325179L;
+			.create(SituatedTemplateCoarseGenlex.class);
 
 	private final GenerationRepositoryWithConstants		coarseRepository;
 
@@ -86,7 +77,7 @@ public class TemplateCoarseGenlex<DI extends Sentence> extends
 	private final IParser<Sentence, LogicalExpression>	parser;
 	private final int									parsingBeam;
 
-	protected TemplateCoarseGenlex(
+	protected SituatedTemplateCoarseGenlex(
 			GenerationRepositoryWithConstants fineRepository,
 			GenerationRepositoryWithConstants coarseRepository, int maxTokens,
 			IParser<Sentence, LogicalExpression> parser, int parsingBeam,
@@ -111,14 +102,14 @@ public class TemplateCoarseGenlex<DI extends Sentence> extends
 		// Create all possible lexemes using abstract lists for all spans of
 		// tokens up to the limit and the abstract factored lexicon.
 		final FactoredLexicon abstractLexicon = new FactoredLexicon(
-				coarseRepository.generate(dataItem.getTokens(), maxTokens,
+				coarseRepository.generate(dataItem.getSample().getTokens(), maxTokens,
 						entryProperties),
 				coarseRepository.getTemplates());
 
 		// Parse with abstract constants.
 		final IParserOutput<LogicalExpression> parserOutput = parser.parse(
-				dataItem, model.createDataItemModel(dataItem), false,
-				abstractLexicon, parsingBeam);
+				dataItem.getSample(), model.createDataItemModel(dataItem.getSample()),
+                false, abstractLexicon, parsingBeam);
 
 		LOG.debug("Abstract parse for lexicon generation completed, %.4fsec",
 				parserOutput.getParsingTime() / 1000.0);
@@ -229,7 +220,7 @@ public class TemplateCoarseGenlex<DI extends Sentence> extends
 		}
 	}
 
-	public static class Builder<DI extends Sentence> {
+	public static class Builder<SAMPLE extends Sentence, DI extends ILabeledDataItem<SAMPLE, ?>> {
 		private static final String								CONST_SEED_NAME	= "absconst";
 
 		private final boolean									mark;
@@ -248,7 +239,7 @@ public class TemplateCoarseGenlex<DI extends Sentence> extends
 			this.mark = mark;
 		}
 
-		public Builder<DI> addConstants(
+		public Builder<SAMPLE, DI> addConstants(
 				Iterable<LogicalConstant> constantCollection) {
 			for (final LogicalConstant constant : constantCollection) {
 				constants.add(constant);
@@ -256,16 +247,16 @@ public class TemplateCoarseGenlex<DI extends Sentence> extends
 			return this;
 		}
 
-		public TemplateCoarseGenlex<DI> build() {
+		public SituatedTemplateCoarseGenlex<SAMPLE, DI> build() {
 			final GenerationRepository repository = new GenerationRepository();
 
-			return new TemplateCoarseGenlex<DI>(
+			return new SituatedTemplateCoarseGenlex<SAMPLE, DI>(
 					repository.setConstants(constants),
 					repository.setConstants(createAbstractConstants()),
 					maxTokens, parser, parsingBeam, origin, mark);
 		}
 
-		public Builder<DI> setOrigin(String origin) {
+		public Builder<SAMPLE, DI> setOrigin(String origin) {
 			this.origin = origin;
 			return this;
 		}
@@ -283,13 +274,13 @@ public class TemplateCoarseGenlex<DI extends Sentence> extends
 
 	}
 
-	public static class Creator<DI extends Sentence>
-			implements IResourceObjectCreator<TemplateCoarseGenlex<DI>> {
+	public static class Creator<SAMPLE extends Sentence, DI extends ILabeledDataItem<SAMPLE, ?>>
+			implements IResourceObjectCreator<SituatedTemplateCoarseGenlex<SAMPLE, DI>> {
 
 		private final String type;
 
 		public Creator() {
-			this("genlex.template.coarse");
+			this("genlex.template.coarse.situated");
 		}
 
 		public Creator(String type) {
@@ -298,9 +289,9 @@ public class TemplateCoarseGenlex<DI extends Sentence> extends
 
 		@SuppressWarnings("unchecked")
 		@Override
-		public TemplateCoarseGenlex<DI> create(Parameters params,
-				IResourceRepository repo) {
-			final Builder<DI> builder = new Builder<DI>(
+		public SituatedTemplateCoarseGenlex<SAMPLE, DI> create(Parameters params,
+                                                               IResourceRepository repo) {
+			final Builder<SAMPLE, DI> builder = new Builder<SAMPLE, DI>(
 					params.getAsInteger("maxTokens"),
 					(IParser<Sentence, LogicalExpression>) repo
 							.get(params.get("parser")),
@@ -324,7 +315,7 @@ public class TemplateCoarseGenlex<DI extends Sentence> extends
 
 		@Override
 		public ResourceUsage usage() {
-			return ResourceUsage.builder(type, TemplateCoarseGenlex.class)
+			return ResourceUsage.builder(type, SituatedTemplateCoarseGenlex.class)
 					.addParam("maxTokens", Integer.class,
 							"Max number of tokens to include in lexical entries.")
 					.addParam("parser", IParser.class,
