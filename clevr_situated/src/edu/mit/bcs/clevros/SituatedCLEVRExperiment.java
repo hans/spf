@@ -19,10 +19,7 @@ package edu.mit.bcs.clevros;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import edu.cornell.cs.nlp.spf.base.hashvector.HashVectorFactory;
 import edu.cornell.cs.nlp.spf.base.hashvector.HashVectorFactory.Type;
@@ -36,17 +33,12 @@ import edu.cornell.cs.nlp.spf.data.singlesentence.SingleSentence;
 import edu.cornell.cs.nlp.spf.explat.DistributedExperiment;
 import edu.cornell.cs.nlp.spf.explat.Job;
 import edu.cornell.cs.nlp.spf.explat.resources.ResourceCreatorRepository;
+import edu.cornell.cs.nlp.spf.genlex.ccg.ILexiconGenerator;
 import edu.cornell.cs.nlp.spf.learn.ILearner;
-import edu.cornell.cs.nlp.spf.mr.lambda.FlexibleTypeComparator;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicLanguageServices;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalConstant;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
+import edu.cornell.cs.nlp.spf.mr.lambda.*;
 import edu.cornell.cs.nlp.spf.mr.lambda.ccg.LogicalExpressionCategoryServices;
 import edu.cornell.cs.nlp.spf.mr.language.type.TypeRepository;
-import edu.cornell.cs.nlp.spf.parser.ccg.model.IModelImmutable;
-import edu.cornell.cs.nlp.spf.parser.ccg.model.IModelInit;
-import edu.cornell.cs.nlp.spf.parser.ccg.model.Model;
-import edu.cornell.cs.nlp.spf.parser.ccg.model.ModelLogger;
+import edu.cornell.cs.nlp.spf.parser.ccg.model.*;
 import edu.cornell.cs.nlp.spf.test.Tester;
 import edu.cornell.cs.nlp.spf.test.stats.ExactMatchTestingStatistics;
 import edu.cornell.cs.nlp.utils.collections.ListUtils;
@@ -108,6 +100,11 @@ public class SituatedCLEVRExperiment extends DistributedExperiment {
 			throw new RuntimeException(e);
 		}
 
+		// DEV: simple ontology for testing
+		Set<LogicalConstant> ontSimple = new HashSet<>();
+		ontSimple.add(LogicalConstant.read("scene:<e,t>"));
+		storeResource("ontology_simple", new Ontology(ontSimple, true));
+
 		// //////////////////////////////////////////////////
 		// Category services for logical expressions
 		// //////////////////////////////////////////////////
@@ -153,6 +150,14 @@ public class SituatedCLEVRExperiment extends DistributedExperiment {
 		// //////////////////////////////////////////////////
 
 		readResrouces();
+
+		// //////////////////////////////////////////////////
+		// Register genlex as a model listener
+		// //////////////////////////////////////////////////
+
+		IModelListener<LogicalExpression> genlex = get("genlex");
+		Model<?, LogicalExpression> model = get("model");
+		model.registerListener(genlex);
 
 		// //////////////////////////////////////////////////
 		// Create jobs

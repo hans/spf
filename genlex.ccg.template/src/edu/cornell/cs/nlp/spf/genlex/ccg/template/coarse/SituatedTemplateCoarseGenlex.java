@@ -250,10 +250,10 @@ public class SituatedTemplateCoarseGenlex<SAMPLE extends Sentence, DI extends IL
 		public SituatedTemplateCoarseGenlex<SAMPLE, DI> build() {
 			final GenerationRepository repository = new GenerationRepository();
 
-			return new SituatedTemplateCoarseGenlex<SAMPLE, DI>(
-					repository.setConstants(constants),
-					repository.setConstants(createAbstractConstants()),
-					maxTokens, parser, parsingBeam, origin, mark);
+			return new SituatedTemplateCoarseGenlex<>(
+                    repository.setConstants(constants),
+                    repository.setConstants(createAbstractConstants()),
+                    maxTokens, parser, parsingBeam, origin, mark);
 		}
 
 		public Builder<SAMPLE, DI> setOrigin(String origin) {
@@ -291,12 +291,12 @@ public class SituatedTemplateCoarseGenlex<SAMPLE extends Sentence, DI extends IL
 		@Override
 		public SituatedTemplateCoarseGenlex<SAMPLE, DI> create(Parameters params,
                                                                IResourceRepository repo) {
-			final Builder<SAMPLE, DI> builder = new Builder<SAMPLE, DI>(
-					params.getAsInteger("maxTokens"),
-					(IParser<Sentence, LogicalExpression>) repo
-							.get(params.get("parser")),
-					params.getAsInteger("beam"),
-					params.getAsBoolean("mark", false));
+			final Builder<SAMPLE, DI> builder = new Builder<>(
+                    params.getAsInteger("maxTokens"),
+                    (IParser<Sentence, LogicalExpression>) repo
+                            .get(params.get("parser")),
+                    params.getAsInteger("beam"),
+                    params.getAsBoolean("mark", false));
 
 			builder.addConstants((Iterable<LogicalConstant>) repo
 					.get(params.get("ontology")));
