@@ -40,6 +40,7 @@ import edu.cornell.cs.nlp.spf.learn.validation.stocgrad.ValidationStocGrad;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
 import edu.cornell.cs.nlp.spf.mr.lambda.ccg.SimpleFullParseFilter;
 import edu.cornell.cs.nlp.spf.parser.ccg.cky.multi.MultiCKYParser;
+import edu.cornell.cs.nlp.spf.parser.ccg.cky.single.CKYParser;
 import edu.cornell.cs.nlp.spf.parser.ccg.factoredlex.features.FactoredLexicalFeatureSet;
 import edu.cornell.cs.nlp.spf.parser.ccg.factoredlex.features.scorers.LexemeCooccurrenceScorer;
 import edu.cornell.cs.nlp.spf.parser.ccg.features.basic.DynamicWordSkippingFeatures;
@@ -76,6 +77,7 @@ public class CLEVRResourceRepo extends ResourceCreatorRepository {
 		registerResourceCreator(new PluralExistentialTypeShifting.Creator());
 		registerResourceCreator(
 				new MultiCKYParser.Creator<Sentence, LogicalExpression>());
+		registerResourceCreator(new CKYParser.Creator<Sentence, LogicalExpression>());
 		registerResourceCreator(new SimpleFullParseFilter.Creator());
 		registerResourceCreator(
 				new ExpLengthLexicalEntryScorer.Creator<LogicalExpression>());
