@@ -2,7 +2,6 @@
 
 (i e)	// integer / number...
 (o e)      // object
-(p e)   // property
 (pc p) // color
 (psi p) // size
 (psh p) // shape

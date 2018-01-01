@@ -355,15 +355,19 @@ public class TypeRepository {
 		final String label = lispReader.next();
 		// The parent type
 		final String parentTypeString = lispReader.next();
-		final Type parentType = getType(parentTypeString);
-		if (parentType instanceof TermType) {
-			return new TermType(label, (TermType) parentType);
-		} else {
+		Type parentType = getType(parentTypeString);
+		if (parentType == null) {
+			// Dynamically create a new parent primitive type.
+			parentType = new TermType(parentTypeString);
+			addType(parentType);
+		} else if (!(parentType instanceof TermType)) {
 			throw new IllegalArgumentException(
 					String.format(
 							"Parent (%s) of primitive type (%s) must be a primitive type",
 							parentType, label));
 		}
+
+		return new TermType(label, (TermType) parentType);
 	}
 
 	private Type createTypeFromString(String string) {
