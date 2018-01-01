@@ -1,2 +1,2 @@
 ## Validation functions
-type=validator.labeled id=validator
+type=validator.clevr id=validator

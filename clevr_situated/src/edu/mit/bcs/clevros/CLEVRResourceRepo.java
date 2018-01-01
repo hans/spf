@@ -65,6 +65,7 @@ import edu.cornell.cs.nlp.spf.parser.ccg.rules.primitivebinary.application.Appli
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.primitivebinary.composition.CompositionCreator;
 import edu.cornell.cs.nlp.spf.test.Tester;
 import edu.mit.bcs.clevros.data.CLEVRCollection;
+import edu.mit.bcs.clevros.data.CLEVRValidator;
 
 public class CLEVRResourceRepo extends ResourceCreatorRepository {
 	public CLEVRResourceRepo() {
@@ -104,7 +105,7 @@ public class CLEVRResourceRepo extends ResourceCreatorRepository {
 		registerResourceCreator(
 				new ValidationStocGrad.Creator<Sentence, SingleSentence, LogicalExpression>());
 		registerResourceCreator(
-				new LabeledValidator.Creator<SingleSentence, LogicalExpression>());
+				new CLEVRValidator.Creator<>());
 		registerResourceCreator(
 				new Tester.Creator<Sentence, LogicalExpression, SingleSentence>());
 		registerResourceCreator(
