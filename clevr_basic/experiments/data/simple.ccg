@@ -1,0 +1,2 @@
+the big metallic object
+(unique:<<e,t>,e> (filter_material:<<e,t>,<pm,<e,t>>> (filter_size:<<e,t>,<psi,<e,t>>> scene:<e,t> large:psi) metal:pm))
