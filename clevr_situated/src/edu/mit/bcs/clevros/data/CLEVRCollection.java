@@ -1,7 +1,9 @@
 package edu.mit.bcs.clevros.data;
 
 import edu.cornell.cs.nlp.spf.base.exceptions.FileReadingException;
+import edu.cornell.cs.nlp.spf.base.token.TokenSeq;
 import edu.cornell.cs.nlp.spf.data.collection.IDataCollection;
+import edu.cornell.cs.nlp.spf.data.sentence.ITokenizer;
 import edu.cornell.cs.nlp.spf.data.sentence.Sentence;
 import edu.cornell.cs.nlp.spf.data.situated.labeled.CLEVRAnswer;
 import edu.cornell.cs.nlp.spf.data.situated.labeled.CLEVRScene;
@@ -17,10 +19,7 @@ import org.json.simple.parser.JSONParser;
 
 import java.io.File;
 import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Collection of {@link SituatedSentence}.
@@ -64,8 +63,8 @@ public class CLEVRCollection
                 JSONObject questionObj = (JSONObject) questionData;
                 CLEVRScene scene = scenes.get(((Long) questionObj.get("image_index")).intValue());
 
-                // TODO custom tokenizer? e.g. for semicolons
-                Sentence sentence = new Sentence((String) questionObj.get("question"));
+				String questionStr = ((String) questionObj.get("question")).toLowerCase();
+                Sentence sentence = new Sentence(questionStr, new CLEVRTokenizer());
 
                 entries.add(new LabeledSituatedSentence<>(
                         new SituatedSentence<>(sentence, scene),
@@ -78,6 +77,19 @@ public class CLEVRCollection
 
         return new CLEVRCollection(entries);
     }
+
+    private static class CLEVRTokenizer implements ITokenizer {
+		@Override
+		public TokenSeq tokenize(String sentence) {
+			sentence = sentence.replaceAll("([.?!;])", " $1 ");
+			final List<String> tokens = new ArrayList<String>();
+			final StringTokenizer st = new StringTokenizer(sentence);
+			while (st.hasMoreTokens()) {
+				tokens.add(st.nextToken().trim());
+			}
+			return TokenSeq.of(tokens);
+		}
+	}
 
 	@Override
 	public Iterator<LabeledSituatedSentence<CLEVRScene, CLEVRAnswer>> iterator() {

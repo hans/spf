@@ -22,6 +22,7 @@ public class CLEVRValidator<DI extends LabeledSituatedSentence<CLEVRScene, CLEVR
 	    final CLEVRAnswer ans;
         TypeRepository repo = LogicLanguageServices.getTypeRepository();
 
+        // TODO support other answer types!
 	    if (label.getType().equals(repo.getTruthValueType())) {
             ans = new CLEVRAnswer(label.equals(LogicLanguageServices.getTrue()));
 	    } else {
