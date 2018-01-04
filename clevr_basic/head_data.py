@@ -130,9 +130,13 @@ def process_sentence(line):
 
 
 def finalize(sentence, sexpr):
+  if len(sentence.split()) > 10:
+    return False
+
   print(sentence)
   print(sexpr)
   print()
+  return True
 
 
 if __name__ == "__main__":
@@ -148,8 +152,8 @@ if __name__ == "__main__":
       line = line.strip()
       if sentence is not None and line.startswith("("):
         sexpr = process_sexpr(line)
-        finalize(sentence, sexpr)
-        n += 1
+        if finalize(sentence, sexpr):
+          n += 1
 
         sentence, sexpr = None, None
       elif sentence is None and line:
