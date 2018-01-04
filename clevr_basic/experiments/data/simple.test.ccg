@@ -1,5 +1,5 @@
-the big metallic object
-(unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> (filter_material:<<e,t>,<pm,<e,t>>> scene:<e,t> metal:pm) large:psi))
-
-the big rubber object
+the huge rubber object
 (unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> (filter_material:<<e,t>,<pm,<e,t>>> scene:<e,t> rubber:pm) large:psi))
+
+the tiny metallic object
+(unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> (filter_material:<<e,t>,<pm,<e,t>>> scene:<e,t> metal:pm) small:psi))
