@@ -20,14 +20,21 @@ public class CLEVRValidator<DI extends LabeledSituatedSentence<CLEVRScene, CLEVR
 	@Override
 	public boolean isValid(DI dataItem, LABEL label) {
 	    final CLEVRAnswer ans;
+	    final CLEVRScene scene = dataItem.getSample().getState();
         TypeRepository repo = LogicLanguageServices.getTypeRepository();
 
         // TODO support other answer types!
 	    if (label.getType().equals(repo.getTruthValueType())) {
             ans = new CLEVRAnswer(label.equals(LogicLanguageServices.getTrue()));
 	    } else {
-	        throw new IllegalArgumentException("Unhandled parser output " + label.toString());
-        }
+	    	try {
+				CLEVRAnswer evaluated = scene.evaluate(label);
+				return dataItem.getLabel().equals(evaluated);
+			} catch (RuntimeException e) {
+				return false;
+			}
+			//throw new IllegalArgumentException("Unhandled parser output " + label.toString());
+	    }
 
 		return dataItem.getLabel().equals(ans);
 	}
