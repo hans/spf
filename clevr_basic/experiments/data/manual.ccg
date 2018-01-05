@@ -48,3 +48,6 @@ are there more big green things than large purple shiny cubes
 
 what is the big object that is behind the blue object made of
 (query_material:<e,pm> (unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> (relate:<e,<s,<e,t>>> (unique:<<e,t>,e> (filter_color:<<e,t>,<pc,<e,t>>> scene:<e,t> blue:pc)) behind:s) large:psi)))
+
+the cube is what color
+(query_color:<e,pc> (unique:<<e,t>,e> (filter_shape:<<e,t>,<psh,<e,t>>> scene:<e,t> cube:psh)))

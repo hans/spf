@@ -36,3 +36,4 @@ left of :- N/N : (lambda $0:e (relate:<e,<s,<e,t>>> $0 left:s))
 // are there more .. than ..
 than :- (N\N)/N : (lambda $0:<e,t> (lambda $1:<e,t> (greater_than:<i,<i,t>> (count:<<e,t>,i> $1) (count:<<e,t>,i> $0)))
 are there more :- S/N : (lambda $0:t $0)
+is what color :- S\N : (lambda $0:e (query_color:<e,pc> $0))
