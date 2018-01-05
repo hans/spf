@@ -1,5 +1,7 @@
 package edu.cornell.cs.nlp.spf.data.situated.labeled;
 
+import org.json.simple.JSONObject;
+
 import java.util.Objects;
 
 public class CLEVRAnswer {
@@ -13,19 +15,32 @@ public class CLEVRAnswer {
         this.answer = answer;
     }
 
-    public static CLEVRAnswer valueOf(String expr) {
-        if (expr.equals("yes") || expr.equals("true")) {
-            return TRUE;
-        } else if (expr.equals("no") || expr.equals("false")) {
-            return FALSE;
+    public static CLEVRAnswer valueOf(Object expr, CLEVRScene scene) {
+        if (expr instanceof String) {
+            String exprStr = (String) expr;
+
+            if (exprStr.equals("yes") || exprStr.equals("true")) {
+                return TRUE;
+            } else if (exprStr.equals("no") || exprStr.equals("false")) {
+                return FALSE;
+            }
+
+            try {
+                int ret = Integer.valueOf(exprStr);
+                return new CLEVRAnswer(ret);
+            } catch (NumberFormatException e) {
+                return new CLEVRAnswer(exprStr);
+            }
+        } else if (expr instanceof JSONObject) {
+            JSONObject exprObj = (JSONObject) expr;
+            String typeString = (String) exprObj.get("type");
+            if (typeString.equals("object")) {
+                int idx = ((Long) exprObj.get("index")).intValue();
+                return new CLEVRAnswer(scene.getObjects().get(idx));
+            }
         }
 
-        try {
-            int ret = Integer.valueOf(expr);
-            return new CLEVRAnswer(ret);
-        } catch (NumberFormatException e) {
-            return new CLEVRAnswer(expr);
-        }
+        throw new IllegalArgumentException("unknown answer type " + expr.toString());
     }
 
     public boolean hasSameType(Object other) {

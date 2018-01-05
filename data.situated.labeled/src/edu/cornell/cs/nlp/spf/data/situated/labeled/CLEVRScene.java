@@ -14,10 +14,10 @@ import static edu.cornell.cs.nlp.spf.data.situated.labeled.CLEVRTypes.CLEVRRelat
 public class CLEVRScene {
 
     private final int imageIndex;
-    private final Set<CLEVRObject> objects;
+    private final List<CLEVRObject> objects;
     private final Map<CLEVRRelation, Map<CLEVRObject, Set<CLEVRObject>>> relations;
 
-    public CLEVRScene(int imageIndex, Set<CLEVRObject> objects,
+    public CLEVRScene(int imageIndex, List<CLEVRObject> objects,
                       Map<CLEVRRelation, Map<CLEVRObject, Set<CLEVRObject>>> relations) {
         this.imageIndex = imageIndex;
         this.objects = objects;
@@ -60,12 +60,9 @@ public class CLEVRScene {
             relations.put(relation, allInstances);
         }
 
-        // Order of objects collection doesn't matter now.
-        Set<CLEVRObject> objectsSet = new HashSet<>(objects);
-
         return new CLEVRScene(
                 ((Long) scene.get("image_index")).intValue(),
-                objectsSet,
+                objects,
                 relations
         );
     }
@@ -93,7 +90,7 @@ public class CLEVRScene {
         return imageIndex;
     }
 
-    public Set<CLEVRObject> getObjects() {
+    public List<CLEVRObject> getObjects() {
         return objects;
     }
 

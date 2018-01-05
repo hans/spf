@@ -19,7 +19,7 @@ class CLEVRSceneTest {
     private CLEVRObject smallObject;
     private CLEVRObject largeObject;
     private CLEVRObject thirdObject;
-    private Set<CLEVRObject> objects;
+    private List<CLEVRObject> objects;
 
     private CLEVRScene scene;
 
@@ -51,7 +51,7 @@ class CLEVRSceneTest {
         thirdObject = new CLEVRObject("green", "large", "cube", "metal",
                 0, 5, 3.5, 0);
 
-        objects = new HashSet<>();
+        objects = new ArrayList<>();
         objects.add(smallObject);
         objects.add(largeObject);
         objects.add(thirdObject);

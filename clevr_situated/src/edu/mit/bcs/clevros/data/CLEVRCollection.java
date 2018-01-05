@@ -68,7 +68,7 @@ public class CLEVRCollection
 
                 entries.add(new LabeledSituatedSentence<>(
                         new SituatedSentence<>(sentence, scene),
-                        CLEVRAnswer.valueOf((String) questionObj.get("answer"))
+                        CLEVRAnswer.valueOf(questionObj.get("answer"), scene)
                 ));
             }
         } catch (final Exception e) {
