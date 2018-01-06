@@ -17,6 +17,7 @@
 package edu.mit.bcs.clevros.test;
 
 import edu.cornell.cs.nlp.spf.data.ILabeledDataItem;
+import edu.cornell.cs.nlp.spf.data.utils.IValidator;
 import edu.cornell.cs.nlp.spf.explat.IResourceRepository;
 import edu.cornell.cs.nlp.spf.explat.ParameterizedExperiment.Parameters;
 import edu.cornell.cs.nlp.spf.explat.resources.IResourceObjectCreator;
@@ -42,23 +43,22 @@ public class ExactMatchSituatedTestingStatistics<SAMPLE, MR, LABEL, DI extends I
 	public static final ILogger	LOG					= LoggerFactory
 															.create(ExactMatchSituatedTestingStatistics.class);
 
-	private static final String	DEFAULT_METRIC_NAME	= "EXACT";
+	private static final String	DEFAULT_METRIC_NAME	= "EXACT_SITUATED";
 
-	public ExactMatchSituatedTestingStatistics() {
-		this(null);
+	private final IValidator<DI, MR> validator;
+
+	public ExactMatchSituatedTestingStatistics(IValidator<DI, MR> validator) {
+		this(validator, null, DEFAULT_METRIC_NAME);
 	}
 
-	public ExactMatchSituatedTestingStatistics(String prefix) {
-		this(prefix, DEFAULT_METRIC_NAME);
+	public ExactMatchSituatedTestingStatistics(IValidator<DI, MR> validator, String prefix, String metricName) {
+		this(validator, prefix, metricName, new SimpleStats<>(DEFAULT_METRIC_NAME));
 	}
 
-	public ExactMatchSituatedTestingStatistics(String prefix, String metricName) {
-		this(prefix, metricName, new SimpleStats<SAMPLE>(DEFAULT_METRIC_NAME));
-	}
-
-	public ExactMatchSituatedTestingStatistics(String prefix, String metricName,
+	public ExactMatchSituatedTestingStatistics(IValidator<DI, MR> validator, String prefix, String metricName,
                                                IStatistics<SAMPLE> stats) {
 		super(prefix, metricName, stats);
+		this.validator = validator;
 	}
 
 	@Override
@@ -76,7 +76,7 @@ public class ExactMatchSituatedTestingStatistics<SAMPLE, MR, LABEL, DI extends I
 
 	@Override
 	public void recordParse(DI dataItem, MR candidate) {
-		if (dataItem.getLabel().equals(candidate)) {
+		if (validator.isValid(dataItem, candidate)) {
 			LOG.info("%s stats -- recording correct parse: %s",
 					getMetricName(), candidate);
 			stats.recordCorrect(dataItem.getSample());
@@ -99,7 +99,7 @@ public class ExactMatchSituatedTestingStatistics<SAMPLE, MR, LABEL, DI extends I
 
 	@Override
 	public void recordParseWithSkipping(DI dataItem, MR candidate) {
-		if (dataItem.getLabel().equals(candidate)) {
+		if (validator.isValid(dataItem, candidate)) {
 			LOG.info("%s stats -- recording correct parse with skipping: %s",
 					getMetricName(), candidate);
 			stats.recordSloppyCorrect(dataItem.getSample());
@@ -128,8 +128,8 @@ public class ExactMatchSituatedTestingStatistics<SAMPLE, MR, LABEL, DI extends I
 		public ExactMatchSituatedTestingStatistics<SAMPLE, MR, LABEL, DI> create(
 				Parameters params, IResourceRepository repo) {
 			return new ExactMatchSituatedTestingStatistics<>(
-					params.get("prefix"), params.get("name",
-					DEFAULT_METRIC_NAME));
+					repo.get(params.get("validator")), params.get("prefix"),
+					params.get("name", DEFAULT_METRIC_NAME));
 		}
 
 		@Override
@@ -147,7 +147,8 @@ public class ExactMatchSituatedTestingStatistics<SAMPLE, MR, LABEL, DI extends I
 							"name",
 							String.class,
 							"Metric name (default: " + DEFAULT_METRIC_NAME
-									+ ")").build();
+									+ ")")
+					.addParam("validator", "id", "Situated validator").build();
 		}
 
 	}

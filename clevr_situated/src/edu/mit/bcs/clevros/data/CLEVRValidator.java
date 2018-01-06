@@ -53,7 +53,7 @@ public class CLEVRValidator<DI extends LabeledSituatedSentence<CLEVRScene, CLEVR
 		@Override
 		public CLEVRValidator<DI, LABEL> create(Parameters params,
 												IResourceRepository repo) {
-			return new CLEVRValidator<DI, LABEL>();
+			return new CLEVRValidator<>();
 		}
 		
 		@Override

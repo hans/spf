@@ -32,6 +32,7 @@ import edu.cornell.cs.nlp.spf.data.sentence.Sentence;
 import edu.cornell.cs.nlp.spf.data.singlesentence.SingleSentence;
 import edu.cornell.cs.nlp.spf.data.situated.labeled.LabeledSituatedSentence;
 import edu.cornell.cs.nlp.spf.data.situated.sentence.SituatedSentence;
+import edu.cornell.cs.nlp.spf.data.utils.IValidator;
 import edu.cornell.cs.nlp.spf.explat.DistributedExperiment;
 import edu.cornell.cs.nlp.spf.explat.Job;
 import edu.cornell.cs.nlp.spf.explat.resources.ResourceCreatorRepository;
@@ -265,9 +266,12 @@ public class SituatedCLEVRExperiment extends DistributedExperiment {
 
 	private Job createTestJob(Parameters params) throws FileNotFoundException {
 
+		final IValidator<LabeledSituatedSentence<CLEVRScene, CLEVRAnswer>, LogicalExpression> validator =
+				get("validator");
+
 		// Make the stats
 		final ExactMatchSituatedTestingStatistics<SituatedSentence<CLEVRScene>, LogicalExpression, CLEVRAnswer, LabeledSituatedSentence<CLEVRScene, CLEVRAnswer>> stats =
-				new ExactMatchSituatedTestingStatistics<>();
+				new ExactMatchSituatedTestingStatistics<>(validator);
 
 		// Get the tester
 		final SituatedTester<CLEVRScene, LogicalExpression, CLEVRAnswer> tester = get(params
