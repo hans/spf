@@ -82,7 +82,7 @@ public class CLEVRScene {
         return new CLEVRAnswer(ret);
     }
 
-    public Object evaluate(String exprString) {
+    public CLEVRAnswer evaluate(String exprString) {
         LogicalExpression expr = Simplify.of(LogicalExpression.read(exprString));
         return evaluate(expr);
     }

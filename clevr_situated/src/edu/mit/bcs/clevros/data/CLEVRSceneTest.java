@@ -150,7 +150,7 @@ class CLEVRSceneTest {
     @Test
     void testEvaluateUnion() {
         Assertions.assertEquals(
-                new CLEVRAnswer(objects),
+                new CLEVRAnswer(new HashSet<>(objects)),
                 scene.evaluate(
                         "(union:<<e,t>,<<e,t>,<e,t>>> " +
                                 "(filter_size:<<e,t>,<psi,<e,t>>> scene:<e,t> large:psi)" +

@@ -47,6 +47,10 @@ public class CLEVRAnswer {
         return this.answer.getClass() == other.getClass();
     }
 
+    public Object getAnswer() {
+        return answer;
+    }
+
     @Override
     public String toString() {
         return String.format("CLEVRAnswer<%s>", answer == null ? null : answer.toString());
