@@ -1,4 +1,4 @@
-package edu.cornell.cs.nlp.spf.data.situated.labeled;
+package edu.mit.bcs.clevros;
 
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalConstant;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
@@ -6,8 +6,11 @@ import edu.cornell.cs.nlp.spf.mr.lambda.Variable;
 import edu.cornell.cs.nlp.spf.mr.lambda.exec.naive.AbstractEvaluationServices;
 import edu.cornell.cs.nlp.spf.mr.lambda.exec.naive.LambdaResult;
 import edu.cornell.cs.nlp.utils.composites.Pair;
+import edu.mit.bcs.clevros.data.CLEVRObject;
+import edu.mit.bcs.clevros.data.CLEVRScene;
+import edu.mit.bcs.clevros.data.CLEVRTypes;
 
-import static edu.cornell.cs.nlp.spf.data.situated.labeled.CLEVRTypes.*;
+import static edu.mit.bcs.clevros.data.CLEVRTypes.*;
 
 import java.util.*;
 import java.util.function.BiFunction;

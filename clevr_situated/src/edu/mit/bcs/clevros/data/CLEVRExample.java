@@ -1,4 +1,4 @@
-package edu.cornell.cs.nlp.spf.data.situated.labeled;
+package edu.mit.bcs.clevros.data;
 
 public class CLEVRExample {
 

@@ -1,7 +1,5 @@
 package edu.mit.bcs.clevros.data;
 
-import edu.cornell.cs.nlp.spf.data.situated.labeled.CLEVRAnswer;
-import edu.cornell.cs.nlp.spf.data.situated.labeled.CLEVRScene;
 import edu.cornell.cs.nlp.spf.data.situated.labeled.LabeledSituatedSentence;
 import edu.cornell.cs.nlp.spf.data.utils.IValidator;
 import edu.cornell.cs.nlp.spf.explat.IResourceRepository;
@@ -9,7 +7,6 @@ import edu.cornell.cs.nlp.spf.explat.ParameterizedExperiment.Parameters;
 import edu.cornell.cs.nlp.spf.explat.resources.IResourceObjectCreator;
 import edu.cornell.cs.nlp.spf.explat.resources.usage.ResourceUsage;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicLanguageServices;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalConstant;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
 import edu.cornell.cs.nlp.spf.mr.language.type.TypeRepository;
 

@@ -1,15 +1,16 @@
-package edu.cornell.cs.nlp.spf.data.situated.labeled;
+package edu.mit.bcs.clevros.data;
 
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
 import edu.cornell.cs.nlp.spf.mr.lambda.exec.naive.Evaluation;
 import edu.cornell.cs.nlp.spf.mr.lambda.exec.naive.LambdaResult;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.Simplify;
+import edu.mit.bcs.clevros.CLEVREvaluationServices;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.util.*;
 
-import static edu.cornell.cs.nlp.spf.data.situated.labeled.CLEVRTypes.CLEVRRelation;
+import static edu.mit.bcs.clevros.data.CLEVRTypes.CLEVRRelation;
 
 public class CLEVRScene {
 

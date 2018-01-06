@@ -1,6 +1,4 @@
-package edu.cornell.cs.nlp.spf.data.situated.labeled;
-
-import static edu.cornell.cs.nlp.spf.data.situated.labeled.CLEVRTypes.*;
+package edu.mit.bcs.clevros.data;
 
 public class CLEVRObject {
     private final String color;

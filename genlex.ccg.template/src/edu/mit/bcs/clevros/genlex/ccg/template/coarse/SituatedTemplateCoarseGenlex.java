@@ -14,7 +14,7 @@
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *******************************************************************************/
-package edu.cornell.cs.nlp.spf.genlex.ccg.template.coarse;
+package edu.mit.bcs.clevros.genlex.ccg.template.coarse;
 
 import edu.cornell.cs.nlp.spf.base.token.TokenSeq;
 import edu.cornell.cs.nlp.spf.ccg.categories.Category;

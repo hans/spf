@@ -22,7 +22,7 @@ import java.io.IOException;
 public class CLEVRDev {
 	
 	public static void main(String[] args) {
-		run("experiments/template/run/dev.exp");
+		run("experiments/template/run/simple.exp");
 	}
 
 	public static void run(String filename) {

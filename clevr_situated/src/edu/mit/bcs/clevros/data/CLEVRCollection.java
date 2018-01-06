@@ -5,8 +5,6 @@ import edu.cornell.cs.nlp.spf.base.token.TokenSeq;
 import edu.cornell.cs.nlp.spf.data.collection.IDataCollection;
 import edu.cornell.cs.nlp.spf.data.sentence.ITokenizer;
 import edu.cornell.cs.nlp.spf.data.sentence.Sentence;
-import edu.cornell.cs.nlp.spf.data.situated.labeled.CLEVRAnswer;
-import edu.cornell.cs.nlp.spf.data.situated.labeled.CLEVRScene;
 import edu.cornell.cs.nlp.spf.data.situated.labeled.LabeledSituatedSentence;
 import edu.cornell.cs.nlp.spf.data.situated.sentence.SituatedSentence;
 import edu.cornell.cs.nlp.spf.explat.IResourceRepository;

@@ -1,9 +1,10 @@
-package edu.cornell.cs.nlp.spf.data.situated.labeled;
+package edu.mit.bcs.clevros.data;
 
 import edu.cornell.cs.nlp.spf.mr.lambda.FlexibleTypeComparator;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicLanguageServices;
 import edu.cornell.cs.nlp.spf.mr.language.type.TypeRepository;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -11,7 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import static edu.cornell.cs.nlp.spf.data.situated.labeled.CLEVRTypes.CLEVRRelation;
+import static edu.mit.bcs.clevros.data.CLEVRTypes.CLEVRRelation;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CLEVRSceneTest {
@@ -98,14 +99,14 @@ class CLEVRSceneTest {
 
     @Test
     void testEvaluateFilter() {
-        assertEquals(
+        Assertions.assertEquals(
                 new CLEVRAnswer(Collections.singleton(largeObject)),
                 scene.evaluate(
                         "(filter_material:<<e,t>,<pm,<e,t>>> scene:<e,t> rubber:pm)")
         );
 
         // Nested filters
-        assertEquals(
+        Assertions.assertEquals(
                 new CLEVRAnswer(Collections.singleton(largeObject)),
                 scene.evaluate(
                         "(filter_size:<<e,t>,<psi,<e,t>>> " +
@@ -115,7 +116,7 @@ class CLEVRSceneTest {
 
     @Test
     void testEvaluateUnique() {
-        assertEquals(
+        Assertions.assertEquals(
                 new CLEVRAnswer(thirdObject),
                 scene.evaluate(
                         "(unique:<<e,t>,e> (filter_shape:<<e,t>,<psh,<e,t>>> scene:<e,t> cube:psh))"
@@ -125,7 +126,7 @@ class CLEVRSceneTest {
 
     @Test
     void testEvaluatePropertyQuery() {
-        assertEquals(
+        Assertions.assertEquals(
                 new CLEVRAnswer("rubber"),
                 scene.evaluate(
                         "(query_material:<e,pm> (unique:<<e,t>,e> " +
@@ -136,7 +137,7 @@ class CLEVRSceneTest {
 
     @Test
     void testEvaluateSame() {
-        assertEquals(
+        Assertions.assertEquals(
                 new CLEVRAnswer(true),
                 scene.evaluate(
                         "(same_shape:<e,<e,t>> " +
@@ -148,7 +149,7 @@ class CLEVRSceneTest {
 
     @Test
     void testEvaluateUnion() {
-        assertEquals(
+        Assertions.assertEquals(
                 new CLEVRAnswer(objects),
                 scene.evaluate(
                         "(union:<<e,t>,<<e,t>,<e,t>>> " +
@@ -160,14 +161,14 @@ class CLEVRSceneTest {
 
     @Test
     void testEvaluateExist() {
-        assertEquals(
+        Assertions.assertEquals(
                 new CLEVRAnswer(true),
                 scene.evaluate(
                         "(exists:<<e,t>,t> (filter_color:<<e,t>,<pc,<e,t>>> scene:<e,t> red:pc)))"
                 )
         );
 
-        assertEquals(
+        Assertions.assertEquals(
                 new CLEVRAnswer(false),
                 scene.evaluate(
                         "(exists:<<e,t>,t> (filter_color:<<e,t>,<pc,<e,t>>> scene:<e,t> brown:pc)))"
@@ -177,7 +178,7 @@ class CLEVRSceneTest {
 
     @Test
     void testEvaluateCount() {
-        assertEquals(
+        Assertions.assertEquals(
                 new CLEVRAnswer(2),
                 scene.evaluate(
                         "(count:<<e,t>,i> (filter_shape:<<e,t>,<psh,<e,t>>> scene:<e,t> cylinder:psh)))"
@@ -187,7 +188,7 @@ class CLEVRSceneTest {
 
     @Test
     void testEvaluateGreaterThan() {
-        assertEquals(
+        Assertions.assertEquals(
                 new CLEVRAnswer(true),
                 scene.evaluate(
                         "(greater_than:<i,<i,t>> " +
@@ -203,7 +204,7 @@ class CLEVRSceneTest {
         expected.add(smallObject);
         expected.add(thirdObject);
 
-        assertEquals(
+        Assertions.assertEquals(
                 new CLEVRAnswer(expected),
                 scene.evaluate(
                         "(relate:<e,<s,<e,t>>> " +
@@ -216,7 +217,7 @@ class CLEVRSceneTest {
 
     @Test
     void testEvaluateEqual() {
-        assertEquals(
+        Assertions.assertEquals(
                 new CLEVRAnswer(true),
                 scene.evaluate(
                         "(equal_shape:<psh,<psh,t>> " +
