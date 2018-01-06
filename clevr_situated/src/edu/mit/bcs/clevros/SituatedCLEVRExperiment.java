@@ -30,6 +30,8 @@ import edu.cornell.cs.nlp.spf.ccg.lexicon.factored.lambda.FactoredLexicalEntry;
 import edu.cornell.cs.nlp.spf.ccg.lexicon.factored.lambda.FactoringServices;
 import edu.cornell.cs.nlp.spf.data.sentence.Sentence;
 import edu.cornell.cs.nlp.spf.data.singlesentence.SingleSentence;
+import edu.cornell.cs.nlp.spf.data.situated.labeled.LabeledSituatedSentence;
+import edu.cornell.cs.nlp.spf.data.situated.sentence.SituatedSentence;
 import edu.cornell.cs.nlp.spf.explat.DistributedExperiment;
 import edu.cornell.cs.nlp.spf.explat.Job;
 import edu.cornell.cs.nlp.spf.explat.resources.ResourceCreatorRepository;
@@ -46,6 +48,10 @@ import edu.cornell.cs.nlp.utils.log.ILogger;
 import edu.cornell.cs.nlp.utils.log.LogLevel;
 import edu.cornell.cs.nlp.utils.log.Logger;
 import edu.cornell.cs.nlp.utils.log.LoggerFactory;
+import edu.mit.bcs.clevros.data.CLEVRAnswer;
+import edu.mit.bcs.clevros.data.CLEVRScene;
+import edu.mit.bcs.clevros.test.ExactMatchSituatedTestingStatistics;
+import edu.mit.bcs.clevros.test.SituatedTester;
 
 public class SituatedCLEVRExperiment extends DistributedExperiment {
 	public static final ILogger						LOG	= LoggerFactory
@@ -260,14 +266,15 @@ public class SituatedCLEVRExperiment extends DistributedExperiment {
 	private Job createTestJob(Parameters params) throws FileNotFoundException {
 
 		// Make the stats
-		final ExactMatchTestingStatistics<Sentence, LogicalExpression, SingleSentence> stats = new ExactMatchTestingStatistics<Sentence, LogicalExpression, SingleSentence>();
+		final ExactMatchSituatedTestingStatistics<SituatedSentence<CLEVRScene>, LogicalExpression, CLEVRAnswer, LabeledSituatedSentence<CLEVRScene, CLEVRAnswer>> stats =
+				new ExactMatchSituatedTestingStatistics<>();
 
 		// Get the tester
-		final Tester<Sentence, LogicalExpression, SingleSentence> tester = get(params
+		final SituatedTester<CLEVRScene, LogicalExpression, CLEVRAnswer> tester = get(params
 				.get("tester"));
 
 		// The model to use
-		final Model<Sentence, LogicalExpression> model = get(params
+		final Model<SituatedSentence<CLEVRScene>, LogicalExpression> model = get(params
 				.get("model"));
 
 		// Create and return the job

@@ -22,12 +22,9 @@ import edu.cornell.cs.nlp.spf.data.sentence.Sentence;
 import edu.cornell.cs.nlp.spf.data.sentence.SentenceLengthFilter;
 import edu.cornell.cs.nlp.spf.data.singlesentence.SingleSentence;
 import edu.cornell.cs.nlp.spf.data.singlesentence.SingleSentenceCollection;
-import edu.mit.bcs.clevros.data.CLEVRAnswer;
-import edu.mit.bcs.clevros.data.CLEVRScene;
 import edu.cornell.cs.nlp.spf.data.situated.labeled.LabeledSituatedSentence;
 import edu.cornell.cs.nlp.spf.data.situated.sentence.SituatedSentence;
 import edu.cornell.cs.nlp.spf.explat.resources.ResourceCreatorRepository;
-import edu.mit.bcs.clevros.genlex.ccg.template.coarse.SituatedTemplateCoarseGenlex;
 import edu.cornell.cs.nlp.spf.genlex.ccg.unification.UnificationGenlex;
 import edu.cornell.cs.nlp.spf.genlex.ccg.unification.UnificationModelInit;
 import edu.cornell.cs.nlp.spf.genlex.ccg.unification.split.Splitter;
@@ -59,9 +56,12 @@ import edu.cornell.cs.nlp.spf.parser.ccg.rules.lambda.typeraising.ForwardTypeRai
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.lambda.typeshifting.PrepositionTypeShifting;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.primitivebinary.application.ApplicationCreator;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.primitivebinary.composition.CompositionCreator;
-import edu.cornell.cs.nlp.spf.test.Tester;
+import edu.mit.bcs.clevros.data.CLEVRAnswer;
 import edu.mit.bcs.clevros.data.CLEVRCollection;
+import edu.mit.bcs.clevros.data.CLEVRScene;
 import edu.mit.bcs.clevros.data.CLEVRValidator;
+import edu.mit.bcs.clevros.genlex.ccg.template.coarse.SituatedTemplateCoarseGenlex;
+import edu.mit.bcs.clevros.test.SituatedTester;
 
 public class CLEVRResourceRepo extends ResourceCreatorRepository {
 	public CLEVRResourceRepo() {
@@ -103,7 +103,7 @@ public class CLEVRResourceRepo extends ResourceCreatorRepository {
 		registerResourceCreator(
 				new CLEVRValidator.Creator<>());
 		registerResourceCreator(
-				new Tester.Creator<Sentence, LogicalExpression, SingleSentence>());
+				new SituatedTester.Creator<SituatedSentence<CLEVRScene>, LogicalExpression, CLEVRAnswer>());
 		registerResourceCreator(
 				new LexiconModelInit.Creator<Sentence, LogicalExpression>());
 		registerResourceCreator(
