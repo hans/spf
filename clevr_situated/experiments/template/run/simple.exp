@@ -1,7 +1,7 @@
 include=../../params.inc
 gThreads=1
-outputDir=../../out/logs_dev
-globalLog=../../out/logs_dev/global.log
+outputDir=../../out/logs_simple
+globalLog=../../out/logs_simple/global.log
 
 # Resources
 # Parser
@@ -14,8 +14,8 @@ include=../../validation.inc
 include=../genlex.inc
 # Training and testing sets
 include=../data.inc
-type=data.composite id=train sets=clevrDevDev
-type=data.composite id=test sets=clevrDevDev
+type=data.composite id=train sets=clevrSimpleRef
+type=data.composite id=test sets=clevrSimpleRef
 # Learner and tester
 include=../learn.inc
 # Initializars
