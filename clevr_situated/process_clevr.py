@@ -1,3 +1,15 @@
+"""
+Process programs in a supervised CLEVR question dataset.
+
+Modifications:
+
+  1. Reorder filter_* calls so that their order matches the sentence surface order.
+  2. Factor filter_*, query_*, equal_* calls into generic filter, query, equal which
+     attend to properties according to a new abstract argument.
+
+"""
+
+from argparse import ArgumentParser
 from collections import namedtuple
 from functools import reduce
 import json
@@ -6,13 +18,8 @@ import re
 import sys
 
 
-SPLIT = "train"
-DATA_PATH = Path("/om/data/public/jgauthie/CLEVR_v1.0/questions/CLEVR_%s_questions.json" % SPLIT)
-OUT_PATH = Path("/om/user/jgauthie/clevros/data/CLEVR_v1.0/questions/CLEVR_%s_questions.sexpr.json" % SPLIT)
-
-PREDS_PATH = Path(__file__).parents[0] / "resources" / "geo.preds.ont"
-with PREDS_PATH.open("r") as f:
-  pred_types = dict([tuple(line.strip().split(":")) for line in f if ":" in line])
+# Type used to indicate attribute type, e.g. shape:a, size:a, etc.
+ABSTRACT_ATTRIBUTE_TYPE = "a"
 
 token_split_re = re.compile(r"([()]|\s+)")
 token_re = re.compile(r"(?<=[(\s])([\w_]+)(?=[)\s])")
@@ -81,7 +88,7 @@ def parse_sexpr(sexpr):
   return old_cur
 
 
-def process_sexpr(line):
+def process_sexpr(line, pred_types, factor_attrs):
   tree = parse_sexpr(line)
 
   # reverse sequences of filter_* calls
@@ -118,6 +125,10 @@ def process_sexpr(line):
   def visitor(node):
     if node.name == "exist_":
       node.name = "exists"
+    elif factor_attrs and node.name.startswith(("filter", "equal", "query", "same")):
+      fn, attribute = node.name.split("_")
+      node.name = fn
+      node.children.insert(0, Node(attribute, type=ABSTRACT_ATTRIBUTE_TYPE))
 
     # Add types.
     node.type = pred_types[node.name]
@@ -155,18 +166,33 @@ def convert_program_to_sexpr(program_struct):
   return inner(program_struct[-1])
 
 
-if __name__ == "__main__":
-  limit = int(sys.argv[1]) if len(sys.argv) > 1 else 5
-  with DATA_PATH.open("r") as data_f:
+def main(args):
+  with open(args.preds_path, "r") as f:
+    pred_types = dict([tuple(line.strip().split(":")) for line in f if ":" in line])
+
+  with open(args.data_path, "r") as data_f:
     data = json.load(data_f)
 
-    for i, question in enumerate(data["questions"]):
+    for i, question in zip(range(args.limit), data["questions"]):
       sentence = process_sentence(question["question"])
 
       # Convert program into a sexpr
-      sexpr = process_sexpr(convert_program_to_sexpr(question["program"]))
+      sexpr = process_sexpr(convert_program_to_sexpr(question["program"]), pred_types,
+                            args.factor_attrs)
 
       question["program_sexpr"] = sexpr
 
-  with OUT_PATH.open("w") as out_f:
+  with open(args.out_path, "w") as out_f:
     json.dump(data, out_f)
+
+
+if __name__ == '__main__':
+  p = ArgumentParser()
+  p.add_argument("data_path")
+  p.add_argument("out_path")
+  p.add_argument("--preds_path", default=str(Path(__file__).parents[0] / "resources" / "geo.preds.ont"))
+  p.add_argument("--limit", default=5, type=int)
+  p.add_argument("--factor-attrs", default=False, action="store_true")
+
+  main(p.parse_args())
+
