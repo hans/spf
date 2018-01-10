@@ -128,7 +128,8 @@ def process_sexpr(line, pred_types, factor_attrs):
     elif factor_attrs and node.name.startswith(("filter", "equal", "query", "same")):
       fn, attribute = node.name.split("_")
       node.name = fn
-      node.children.insert(0, Node(attribute, type=ABSTRACT_ATTRIBUTE_TYPE))
+      if fn != "equal":
+        node.children.insert(0, Node(attribute, type=ABSTRACT_ATTRIBUTE_TYPE))
 
     # Add types.
     node.type = pred_types[node.name]
