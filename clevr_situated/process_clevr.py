@@ -170,11 +170,14 @@ def main(args):
   with open(args.preds_path, "r") as f:
     pred_types = dict([tuple(line.strip().split(":")) for line in f if ":" in line])
 
-  with open(args.data_path, "r") as data_f:
+  with open(args.data_path, "r") as data_f, open(args.out_path, "w") as out_f:
     data = json.load(data_f)
 
     for i, question in zip(range(args.limit), data["questions"]):
       sentence = process_sentence(question["question"])
+
+      if args.max_len > 0 and len(sentence.strip().split()) > args.max_len:
+        continue
 
       # Convert program into a sexpr
       sexpr = process_sexpr(convert_program_to_sexpr(question["program"]), pred_types,
@@ -182,8 +185,14 @@ def main(args):
 
       question["program_sexpr"] = sexpr
 
-  with open(args.out_path, "w") as out_f:
-    json.dump(data, out_f)
+      if args.output_format == "plain":
+        out_f.write(question["question"])
+        out_f.write("\n")
+        out_f.write(question["program_sexpr"])
+        out_f.write("\n\n")
+
+    if args.output_format == "json":
+      json.dump(data, out_f)
 
 
 if __name__ == '__main__':
@@ -192,7 +201,9 @@ if __name__ == '__main__':
   p.add_argument("out_path")
   p.add_argument("--preds_path", default=str(Path(__file__).parents[0] / "resources" / "geo.preds.ont"))
   p.add_argument("--limit", default=5, type=int)
-  p.add_argument("--factor-attrs", default=False, action="store_true")
+  p.add_argument("--max_len", default=0, type=int)
+  p.add_argument("--factor_attrs", default=False, action="store_true")
+  p.add_argument("--output_format", choices=["json", "plain"], default="json")
 
   main(p.parse_args())
 
