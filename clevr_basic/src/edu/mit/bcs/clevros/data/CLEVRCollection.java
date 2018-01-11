@@ -31,12 +31,18 @@ public abstract class CLEVRCollection<DI extends ILabeledDataItem<?, ?>>
         this.shuffle = shuffle;
     }
 
+    public void addAll(List<DI> entries) {
+        this.entries.addAll(entries);
+    }
+
     protected abstract DI readQuestionJSON(JSONObject questionData, CLEVRScene scene);
 
     public static <SAMPLE, LABEL, DI extends ILabeledDataItem<SAMPLE, LABEL>,
                    COLL extends CLEVRCollection<DI>> COLL
-      read(Class<COLL> collType, File scenesFile, File questionsFile, boolean shuffle) {
+      read(Class<COLL> collType, File scenesFile, File questionsFile, boolean shuffle, int subsampleQuestions) {
         File curFile = null;
+
+        List<DI> entries = new ArrayList<>();
         final COLL collection;
 
         try {
@@ -70,12 +76,21 @@ public abstract class CLEVRCollection<DI extends ILabeledDataItem<?, ?>>
                 JSONObject questionObj = (JSONObject) questionData;
                 CLEVRScene scene = scenes.get(((Long) questionObj.get("image_index")).intValue());
 
-                collection.entries.add(collection.readQuestionJSON(questionObj, scene));
+                entries.add(collection.readQuestionJSON(questionObj, scene));
             }
         } catch (final Exception e) {
             throw new FileReadingException(e, 0, curFile.getName());
         }
 
+        if (subsampleQuestions != 0) {
+            if (!shuffle)
+                throw new IllegalArgumentException("subsampling without shuffling not supported");
+
+            Collections.shuffle(entries);
+            entries = entries.subList(0, subsampleQuestions);
+        }
+
+        collection.addAll(entries);
         return collection;
     }
 
