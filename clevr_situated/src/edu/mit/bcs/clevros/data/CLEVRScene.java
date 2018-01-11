@@ -4,7 +4,7 @@ import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
 import edu.cornell.cs.nlp.spf.mr.lambda.exec.naive.Evaluation;
 import edu.cornell.cs.nlp.spf.mr.lambda.exec.naive.LambdaResult;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.Simplify;
-import edu.mit.bcs.clevros.CLEVREvaluationServices;
+import edu.mit.bcs.clevros.situated.CLEVREvaluationServices;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 

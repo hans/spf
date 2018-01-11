@@ -14,7 +14,7 @@
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *******************************************************************************/
-package edu.cornell.cs.nlp.spf.geoquery;
+package edu.mit.bcs.clevros;
 
 import edu.cornell.cs.nlp.spf.ccg.lexicon.factored.lambda.FactoredLexicon;
 import edu.cornell.cs.nlp.spf.data.collection.CompositeDataCollection;
@@ -57,8 +57,8 @@ import edu.cornell.cs.nlp.spf.parser.ccg.rules.primitivebinary.application.Appli
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.primitivebinary.composition.CompositionCreator;
 import edu.cornell.cs.nlp.spf.test.Tester;
 
-public class GeoResourceRepo extends ResourceCreatorRepository {
-	public GeoResourceRepo() {
+public class CLEVRResourceRepo extends ResourceCreatorRepository {
+	public CLEVRResourceRepo() {
 		// Parser creators
 		registerResourceCreator(new ApplicationCreator<LogicalExpression>());
 		registerResourceCreator(new CompositionCreator<LogicalExpression>());

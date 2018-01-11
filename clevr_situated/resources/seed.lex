@@ -1,6 +1,7 @@
 object :- N : scene:<e,t>
 object :- N/N : (lambda $0:<e,t> $0)
 object that is :- N/N : (lambda $0:<e,t> $0)
+object :- S : true:t
 
 other :- N/N : (lambda $0:<e,t> $0)
 

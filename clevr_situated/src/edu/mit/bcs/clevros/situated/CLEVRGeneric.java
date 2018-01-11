@@ -14,16 +14,23 @@
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *******************************************************************************/
-package edu.mit.bcs.clevros.test;
+package edu.mit.bcs.clevros.situated;
 
-import edu.cornell.cs.nlp.spf.data.IDataItem;
-import edu.cornell.cs.nlp.spf.data.ILabeledDataItem;
-import edu.cornell.cs.nlp.spf.parser.ccg.model.IModelImmutable;
-import edu.cornell.cs.nlp.spf.test.stats.ITestingStatistics;
+import java.io.File;
+import java.io.IOException;
 
-public interface ISituatedTester<SAMPLE extends IDataItem<?>, MR, LABEL, DI extends ILabeledDataItem<SAMPLE, LABEL>> {
-
-	void test(IModelImmutable<SAMPLE, MR> model,
-              ISituatedTestingStatistics<SAMPLE, MR, LABEL, DI> stats);
-
+public class CLEVRGeneric {
+	
+	public static void main(String[] args) {
+		run(args[0]);
+	}
+	
+	public static void run(String filename) {
+		try {
+			new SituatedCLEVRExperiment(new File(filename)).start();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 }

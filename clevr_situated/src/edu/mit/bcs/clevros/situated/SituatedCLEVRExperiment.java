@@ -14,7 +14,7 @@
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *******************************************************************************/
-package edu.mit.bcs.clevros;
+package edu.mit.bcs.clevros.situated;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -36,14 +36,11 @@ import edu.cornell.cs.nlp.spf.data.utils.IValidator;
 import edu.cornell.cs.nlp.spf.explat.DistributedExperiment;
 import edu.cornell.cs.nlp.spf.explat.Job;
 import edu.cornell.cs.nlp.spf.explat.resources.ResourceCreatorRepository;
-import edu.cornell.cs.nlp.spf.genlex.ccg.ILexiconGenerator;
 import edu.cornell.cs.nlp.spf.learn.ILearner;
 import edu.cornell.cs.nlp.spf.mr.lambda.*;
 import edu.cornell.cs.nlp.spf.mr.lambda.ccg.LogicalExpressionCategoryServices;
 import edu.cornell.cs.nlp.spf.mr.language.type.TypeRepository;
 import edu.cornell.cs.nlp.spf.parser.ccg.model.*;
-import edu.cornell.cs.nlp.spf.test.Tester;
-import edu.cornell.cs.nlp.spf.test.stats.ExactMatchTestingStatistics;
 import edu.cornell.cs.nlp.utils.collections.ListUtils;
 import edu.cornell.cs.nlp.utils.log.ILogger;
 import edu.cornell.cs.nlp.utils.log.LogLevel;
@@ -51,8 +48,8 @@ import edu.cornell.cs.nlp.utils.log.Logger;
 import edu.cornell.cs.nlp.utils.log.LoggerFactory;
 import edu.mit.bcs.clevros.data.CLEVRAnswer;
 import edu.mit.bcs.clevros.data.CLEVRScene;
-import edu.mit.bcs.clevros.test.ExactMatchSituatedTestingStatistics;
-import edu.mit.bcs.clevros.test.SituatedTester;
+import edu.mit.bcs.clevros.situated.test.ExactMatchSituatedTestingStatistics;
+import edu.mit.bcs.clevros.situated.test.SituatedTester;
 
 public class SituatedCLEVRExperiment extends DistributedExperiment {
 	public static final ILogger						LOG	= LoggerFactory

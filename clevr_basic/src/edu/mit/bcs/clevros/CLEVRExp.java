@@ -14,7 +14,7 @@
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *******************************************************************************/
-package edu.cornell.cs.nlp.spf.geoquery;
+package edu.mit.bcs.clevros;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -57,19 +57,19 @@ import edu.cornell.cs.nlp.utils.log.LogLevel;
 import edu.cornell.cs.nlp.utils.log.Logger;
 import edu.cornell.cs.nlp.utils.log.LoggerFactory;
 
-public class GeoExp extends DistributedExperiment {
+public class CLEVRExp extends DistributedExperiment {
 	public static final ILogger						LOG	= LoggerFactory
-																.create(GeoExp.class);
+																.create(CLEVRExp.class);
 
 	private final LogicalExpressionCategoryServices	categoryServices;
 
-	public GeoExp(File initFile) throws IOException {
+	public CLEVRExp(File initFile) throws IOException {
 		this(initFile, Collections.<String, String> emptyMap(),
-				new GeoResourceRepo());
+				new CLEVRResourceRepo());
 	}
 
-	public GeoExp(File initFile, Map<String, String> envParams,
-			ResourceCreatorRepository creatorRepo) throws IOException {
+	public CLEVRExp(File initFile, Map<String, String> envParams,
+					ResourceCreatorRepository creatorRepo) throws IOException {
 		super(initFile, envParams, creatorRepo);
 
 		LogLevel.DEV.set();

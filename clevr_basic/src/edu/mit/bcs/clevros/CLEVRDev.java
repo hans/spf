@@ -16,22 +16,21 @@
  *******************************************************************************/
 package edu.mit.bcs.clevros;
 
-import edu.cornell.cs.nlp.utils.log.ILogger;
-import edu.cornell.cs.nlp.utils.log.LoggerFactory;
+import java.io.File;
+import java.io.IOException;
 
-/**
- * Main class for GeoQuery experiments.
- * 
- * @author Yoav Artzi
- */
-public class CLEVRMain {
-	public static final ILogger	LOG	= LoggerFactory.create(CLEVRMain.class);
+public class CLEVRDev {
 	
 	public static void main(String[] args) {
-		if (args.length < 1) {
-			LOG.error("Missing arguments. Expects a .exp file as argument.");
-			System.exit(-1);
-		}
-		CLEVRGeneric.main(args);
+		run("experiments/template/dev.cross/dev.exp");
 	}
+	
+	public static void run(String filename) {
+		try {
+			new CLEVRExp(new File(filename)).start();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 }

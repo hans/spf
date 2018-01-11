@@ -14,23 +14,32 @@
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *******************************************************************************/
-package edu.cornell.cs.nlp.spf.geoquery;
+package edu.mit.bcs.clevros;
+
+import edu.cornell.cs.nlp.utils.log.ILogger;
+import edu.cornell.cs.nlp.utils.log.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 
-public class GeoGenericExperiment {
+/**
+ * Main class for GeoQuery experiments.
+ * 
+ * @author Yoav Artzi
+ */
+public class CLEVRMain {
+	public static final ILogger	LOG	= LoggerFactory.create(CLEVRMain.class);
 	
 	public static void main(String[] args) {
-		run(args[0]);
-	}
-	
-	public static void run(String filename) {
+		if (args.length < 1) {
+			LOG.error("Missing arguments. Expects a .exp file as argument.");
+			System.exit(-1);
+		}
+
 		try {
-			new GeoExp(new File(filename)).start();
+			new CLEVRExp(new File(args[0])).start();
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
 	}
-	
 }

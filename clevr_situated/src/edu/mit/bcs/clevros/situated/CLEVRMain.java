@@ -14,46 +14,24 @@
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *******************************************************************************/
-package edu.mit.bcs.clevros.test;
+package edu.mit.bcs.clevros.situated;
 
-import edu.cornell.cs.nlp.spf.data.ILabeledDataItem;
-
-import java.util.List;
+import edu.cornell.cs.nlp.utils.log.ILogger;
+import edu.cornell.cs.nlp.utils.log.LoggerFactory;
 
 /**
- * Accumulates testing statistics.
- *
+ * Main class for GeoQuery experiments.
+ * 
  * @author Yoav Artzi
  */
-public interface ISituatedTestingStatistics<SAMPLE, MR, LABEL, DI extends ILabeledDataItem<SAMPLE, LABEL>> {
-
-	void recordNoParse(DI dataItem);
-
-	void recordNoParseWithSkipping(DI dataItem);
-
-	/**
-	 * Record a parse.
-	 */
-	void recordParse(DI dataItem, MR candidate);
-
-	void recordParses(DI dataItem, List<MR> candidates);
-
-	void recordParsesWithSkipping(DI dataItem, List<MR> candidates);
-
-	/**
-	 * Record a parse with word skipping enabled. Assumes a record parse for
-	 * this data item has been called earlier.
-	 */
-	void recordParseWithSkipping(DI dataItem, MR candidate);
-
-	@Override
-	String toString();
-
-	/**
-	 * Generate machine readable tab-delimited string. Formatting:
-	 * <key>=<value>\t<key>=<value>...
-	 *
-	 * @return
-	 */
-	String toTabDelimitedString();
+public class CLEVRMain {
+	public static final ILogger	LOG	= LoggerFactory.create(CLEVRMain.class);
+	
+	public static void main(String[] args) {
+		if (args.length < 1) {
+			LOG.error("Missing arguments. Expects a .exp file as argument.");
+			System.exit(-1);
+		}
+		CLEVRGeneric.main(args);
+	}
 }

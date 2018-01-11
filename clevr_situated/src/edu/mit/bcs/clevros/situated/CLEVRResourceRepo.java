@@ -14,7 +14,7 @@
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *******************************************************************************/
-package edu.mit.bcs.clevros;
+package edu.mit.bcs.clevros.situated;
 
 import edu.cornell.cs.nlp.spf.ccg.lexicon.factored.lambda.FactoredLexicon;
 import edu.cornell.cs.nlp.spf.data.collection.CompositeDataCollection;
@@ -61,7 +61,7 @@ import edu.mit.bcs.clevros.data.CLEVRCollection;
 import edu.mit.bcs.clevros.data.CLEVRScene;
 import edu.mit.bcs.clevros.data.CLEVRValidator;
 import edu.mit.bcs.clevros.genlex.ccg.template.coarse.SituatedTemplateCoarseGenlex;
-import edu.mit.bcs.clevros.test.SituatedTester;
+import edu.mit.bcs.clevros.situated.test.SituatedTester;
 
 public class CLEVRResourceRepo extends ResourceCreatorRepository {
 	public CLEVRResourceRepo() {

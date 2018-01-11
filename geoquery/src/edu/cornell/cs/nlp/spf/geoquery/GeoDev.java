@@ -22,7 +22,7 @@ import java.io.IOException;
 public class GeoDev {
 	
 	public static void main(String[] args) {
-		run("experiments/template/dev.cross/dev.fold0.exp");
+		run("experiments/template/dev.cross/dev.exp");
 	}
 	
 	public static void run(String filename) {

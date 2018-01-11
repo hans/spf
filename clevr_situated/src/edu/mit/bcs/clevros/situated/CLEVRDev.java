@@ -14,17 +14,17 @@
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *******************************************************************************/
-package edu.mit.bcs.clevros;
+package edu.mit.bcs.clevros.situated;
 
 import java.io.File;
 import java.io.IOException;
 
-public class CLEVRGeneric {
+public class CLEVRDev {
 	
 	public static void main(String[] args) {
-		run(args[0]);
+		run("experiments/template/run/simple.exp");
 	}
-	
+
 	public static void run(String filename) {
 		try {
 			new SituatedCLEVRExperiment(new File(filename)).start();
