@@ -1,4 +1,4 @@
-package edu.mit.bcs.clevros.situated;
+package edu.mit.bcs.clevros;
 
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalConstant;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
