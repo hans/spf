@@ -180,6 +180,8 @@ def main(args):
       if args.max_len > 0 and len(sentence.strip().split()) > args.max_len:
         continue
 
+      question["question"] = sentence
+
       # Convert program into a sexpr
       sexpr = process_sexpr(convert_program_to_sexpr(question["program"]), pred_types,
                             args.factor_attrs)
