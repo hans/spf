@@ -18,7 +18,11 @@ public class BasicCLEVRCollection extends CLEVRCollection<SingleSentence> {
 
 	private static final String SEXPR_KEY = "question_sexpr";
 
-	public BasicCLEVRCollection(List<SingleSentence> entries, boolean shuffle) {
+    public BasicCLEVRCollection(boolean shuffle) {
+        super(shuffle);
+    }
+
+    public BasicCLEVRCollection(List<SingleSentence> entries, boolean shuffle) {
 		super(entries, shuffle);
 	}
 

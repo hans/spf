@@ -18,7 +18,11 @@ public class SituatedCLEVRCollection extends CLEVRCollection<LabeledSituatedSent
 
 	private static final long					serialVersionUID	= -3259824918810436454L;
 
-	public SituatedCLEVRCollection(List<LabeledSituatedSentence<CLEVRScene, CLEVRAnswer>> entries, boolean shuffle) {
+    public SituatedCLEVRCollection(boolean shuffle) {
+        super(shuffle);
+    }
+
+    public SituatedCLEVRCollection(List<LabeledSituatedSentence<CLEVRScene, CLEVRAnswer>> entries, boolean shuffle) {
 		super(entries, shuffle);
 	}
 

@@ -21,7 +21,7 @@ public abstract class CLEVRCollection<DI extends ILabeledDataItem<?, ?>>
     protected final List<DI> entries;
     protected final boolean shuffle;
 
-    private CLEVRCollection(boolean shuffle) {
+    protected CLEVRCollection(boolean shuffle) {
         this.entries = new ArrayList<>();
         this.shuffle = shuffle;
     }
