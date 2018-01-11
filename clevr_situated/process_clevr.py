@@ -173,6 +173,7 @@ def main(args):
 
   with open(args.data_path, "r") as data_f, open(args.out_path, "w") as out_f:
     data = json.load(data_f)
+    new_data = {"info": data["info"], "questions": []}
 
     for i, question in zip(range(args.limit), data["questions"]):
       sentence = process_sentence(question["question"])
@@ -189,6 +190,8 @@ def main(args):
       del question["program"]
       question["program_sexpr"] = sexpr
 
+      new_data["questions"].append(question)
+
       if args.output_format == "plain":
         out_f.write(question["question"])
         out_f.write("\n")
@@ -196,7 +199,7 @@ def main(args):
         out_f.write("\n\n")
 
     if args.output_format == "json":
-      json.dump(data, out_f)
+      json.dump(new_data, out_f)
 
 
 if __name__ == '__main__':
