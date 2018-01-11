@@ -91,6 +91,11 @@ public abstract class AbstractLearner<SAMPLE extends IDataItem<?>, DI extends IL
 	private final int														epochs;
 
 	/**
+	 * Limit on number of training iterations.
+	 */
+	private final int                                                       maxIterations;
+
+	/**
 	 * The learner is error driven, meaning: if it can parse a sentence, it will
 	 * skip lexical induction.
 	 */
@@ -130,7 +135,7 @@ public abstract class AbstractLearner<SAMPLE extends IDataItem<?>, DI extends IL
 	 */
 	protected final LearningStats											stats;
 
-	protected AbstractLearner(int numIterations,
+	protected AbstractLearner(int epochs, int maxIterations,
 			IDataCollection<DI> trainingData, Map<DI, MR> trainingDataDebug,
 			int lexiconGenerationBeamSize, IOutputLogger<MR> parserOutputLogger,
 			boolean conflateGenlexAndPrunedParses, boolean errorDriven,
@@ -138,7 +143,8 @@ public abstract class AbstractLearner<SAMPLE extends IDataItem<?>, DI extends IL
 			ILexiconGenerator<DI, MR, IModelImmutable<SAMPLE, MR>> genlex,
 			IFilter<DI> processingFilter,
 			IParsingFilterFactory<DI, MR> parsingFilterFactory) {
-		this.epochs = numIterations;
+		this.epochs = epochs;
+		this.maxIterations = maxIterations;
 		this.trainingData = trainingData;
 		this.trainingDataDebug = trainingDataDebug;
 		this.lexiconGenerationBeamSize = lexiconGenerationBeamSize;
@@ -164,8 +170,10 @@ public abstract class AbstractLearner<SAMPLE extends IDataItem<?>, DI extends IL
 		LOG.info("Initializing GENLEX ...");
 		genlex.init(model);
 
+		int iterations = 0;
+
 		// Epochs
-		for (int epochNumber = 0; epochNumber < epochs; ++epochNumber) {
+		outer: for (int epochNumber = 0; epochNumber < epochs; ++epochNumber) {
 			// Training epoch, iterate over all training samples
 			LOG.info("=========================");
 			LOG.info("Training epoch %d", epochNumber);
@@ -284,6 +292,12 @@ public abstract class AbstractLearner<SAMPLE extends IDataItem<?>, DI extends IL
 					LOG.info("Total sample handling time: %.4fsec",
 							(System.currentTimeMillis() - startTime) / 1000.0);
 				}
+
+                iterations++;
+                if (iterations >= maxIterations) {
+                    LOG.info("Reached max iteration count of %d. Ending.", iterations);
+                    break outer;
+                }
 			}
 
 			// Output epoch statistics
