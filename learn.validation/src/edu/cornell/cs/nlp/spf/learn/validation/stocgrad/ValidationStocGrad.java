@@ -462,7 +462,7 @@ public class ValidationStocGrad<SAMPLE extends IDataItem<SAMPLE>, DI extends ILa
 			}
 
 			if (params.contains("epochs")) {
-				builder.setEpochs(Integer.valueOf(params.get("iter")));
+				builder.setEpochs(Integer.valueOf(params.get("epochs")));
 			}
 
 			if (params.contains("maxIterations")) {
