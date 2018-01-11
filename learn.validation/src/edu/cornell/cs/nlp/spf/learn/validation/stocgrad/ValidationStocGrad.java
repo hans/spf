@@ -83,7 +83,7 @@ public class ValidationStocGrad<SAMPLE extends IDataItem<SAMPLE>, DI extends ILa
 
 	private final IValidator<DI, MR>		validator;
 
-	private ValidationStocGrad(int numIterations,
+	private ValidationStocGrad(int epochs, int maxIterations,
 			IDataCollection<DI> trainingData, Map<DI, MR> trainingDataDebug,
 			int maxSentenceLength, int lexiconGenerationBeamSize,
 			IGraphParser<SAMPLE, MR> parser,
@@ -93,7 +93,7 @@ public class ValidationStocGrad<SAMPLE extends IDataItem<SAMPLE>, DI extends ILa
 			ILexiconGenerator<DI, MR, IModelImmutable<SAMPLE, MR>> genlex,
 			IFilter<DI> processingFilter,
 			IParsingFilterFactory<DI, MR> parsingFilterFactory) {
-		super(numIterations, trainingData, trainingDataDebug,
+		super(epochs, maxIterations, trainingData, trainingDataDebug,
 				lexiconGenerationBeamSize, parserOutputLogger,
 				conflateGenlexAndPrunedParses, errorDriven, categoryServices,
 				genlex, processingFilter, parsingFilterFactory);
@@ -102,8 +102,8 @@ public class ValidationStocGrad<SAMPLE extends IDataItem<SAMPLE>, DI extends ILa
 		this.c = c;
 		this.validator = validator;
 		LOG.info(
-				"Init ValidationStocGrad: numIterations=%d, trainingData.size()=%d, trainingDataDebug.size()=%d, maxSentenceLength=%d ...",
-				numIterations, trainingData.size(), trainingDataDebug.size(),
+				"Init ValidationStocGrad: epochs=%d, maxIterations=%d, trainingData.size()=%d, trainingDataDebug.size()=%d, maxSentenceLength=%d ...",
+				epochs, maxIterations, trainingData.size(), trainingDataDebug.size(),
 				maxSentenceLength);
 		LOG.info("Init ValidationStocGrad: ... lexiconGenerationBeamSize=%d",
 				lexiconGenerationBeamSize);
@@ -270,6 +270,9 @@ public class ValidationStocGrad<SAMPLE extends IDataItem<SAMPLE>, DI extends ILa
 		 * parameter update.
 		 */
 		private boolean													conflateGenlexAndPrunedParses	= false;
+
+		private int                                                     epochs                          = 4;
+
 		private boolean													errorDriven						= false;
 
 		/**
@@ -288,14 +291,13 @@ public class ValidationStocGrad<SAMPLE extends IDataItem<SAMPLE>, DI extends ILa
 		 */
 		private int														lexiconGenerationBeamSize		= 20;
 
+		private int                                                     maxIterations                   = 0;
+
 		/**
 		 * Max sentence length. Sentence longer than this value will be skipped
 		 * during training
 		 */
 		private final int												maxSentenceLength				= Integer.MAX_VALUE;
-
-		/** Number of training iterations */
-		private int														numIterations					= 4;
 
 		private final IGraphParser<SAMPLE, MR>							parser;
 
@@ -335,7 +337,7 @@ public class ValidationStocGrad<SAMPLE extends IDataItem<SAMPLE>, DI extends ILa
 		}
 
 		public ValidationStocGrad<SAMPLE, DI, MR> build() {
-			return new ValidationStocGrad<SAMPLE, DI, MR>(numIterations,
+			return new ValidationStocGrad<SAMPLE, DI, MR>(epochs, maxIterations,
 					trainingData, trainingDataDebug, maxSentenceLength,
 					lexiconGenerationBeamSize, parser, parserOutputLogger,
 					alpha0, c, validator, conflateGenlexAndPrunedParses,
@@ -359,6 +361,11 @@ public class ValidationStocGrad<SAMPLE extends IDataItem<SAMPLE>, DI extends ILa
 			return this;
 		}
 
+		public Builder<SAMPLE, DI, MR> setEpochs(int epochs) {
+			this.epochs = epochs;
+			return this;
+		}
+
 		public Builder<SAMPLE, DI, MR> setErrorDriven(boolean errorDriven) {
 			this.errorDriven = errorDriven;
 			return this;
@@ -378,8 +385,8 @@ public class ValidationStocGrad<SAMPLE extends IDataItem<SAMPLE>, DI extends ILa
 			return this;
 		}
 
-		public Builder<SAMPLE, DI, MR> setNumIterations(int numIterations) {
-			this.numIterations = numIterations;
+		public Builder<SAMPLE, DI, MR> setMaxIterations(int maxIterations) {
+			this.maxIterations = maxIterations;
 			return this;
 		}
 
@@ -454,8 +461,12 @@ public class ValidationStocGrad<SAMPLE extends IDataItem<SAMPLE>, DI extends ILa
 						Integer.valueOf(params.get("genlexbeam")));
 			}
 
-			if (params.contains("iter")) {
-				builder.setNumIterations(Integer.valueOf(params.get("iter")));
+			if (params.contains("epochs")) {
+				builder.setEpochs(Integer.valueOf(params.get("iter")));
+			}
+
+			if (params.contains("maxIterations")) {
+				builder.setMaxIterations(params.getAsInteger("maxIterations"));
 			}
 
 			if (params.contains("filter")) {
