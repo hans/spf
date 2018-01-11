@@ -294,7 +294,7 @@ public abstract class AbstractLearner<SAMPLE extends IDataItem<?>, DI extends IL
 				}
 
                 iterations++;
-                if (iterations >= maxIterations) {
+                if (maxIterations > 0 && iterations >= maxIterations) {
                     LOG.info("Reached max iteration count of %d. Ending.", iterations);
                     break outer;
                 }
