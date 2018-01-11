@@ -1,7 +1,7 @@
 include=../../params.inc
-gIter=50
-outputDir=../../out/logs_full.100
-globalLog=../../out/logs_full.100/global.log
+gIter=20
+outputDir=../../out/logs_full
+globalLog=../../out/logs_full/global.log
 
 # Resources
 # Parser
@@ -13,9 +13,9 @@ include=../../validation.inc
 # Lexical generator
 include=../genlex.inc
 # Training and testing sets
-include=data.inc
+include=../data.inc
 #type=data.composite id=train sets=fold1,fold2,fold3,fold4,fold5,fold6,fold7,fold8,fold9
-type=data.composite id=train sets=train0_100
+type=data.composite id=train sets=train0
 type=data.composite id=test sets=test0
 # Learner and tester
 include=../learn.inc
