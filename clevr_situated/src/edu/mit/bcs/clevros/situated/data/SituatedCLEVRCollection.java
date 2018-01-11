@@ -43,7 +43,8 @@ public class SituatedCLEVRCollection extends CLEVRCollection<LabeledSituatedSent
 					SituatedCLEVRCollection.class,
 					params.getAsFile("scenesFile"),
 					params.getAsFile("questionsFile"),
-					params.getAsBoolean("shuffle", false));
+					params.getAsBoolean("shuffle", false),
+                    params.getAsInteger("subsampleQuestions", 0));
 		}
 
 		@Override
