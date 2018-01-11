@@ -16,7 +16,7 @@ import java.util.List;
 
 public class BasicCLEVRCollection extends CLEVRCollection<SingleSentence> {
 
-	private static final String SEXPR_KEY = "question_sexpr";
+	private static final String SEXPR_KEY = "program_sexpr";
 
     public BasicCLEVRCollection(boolean shuffle) {
         super(shuffle);
