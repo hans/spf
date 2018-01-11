@@ -46,7 +46,7 @@ public abstract class CLEVRCollection<DI extends ILabeledDataItem<?, ?>>
         final COLL collection;
 
         try {
-            collection = collType.getDeclaredConstructor(Boolean.class).newInstance(shuffle);
+            collection = collType.getDeclaredConstructor(Boolean.TYPE).newInstance(shuffle);
         } catch (Exception e) {
             // TODO
             e.printStackTrace();
