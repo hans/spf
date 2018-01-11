@@ -186,6 +186,7 @@ def main(args):
       sexpr = process_sexpr(convert_program_to_sexpr(question["program"]), pred_types,
                             args.factor_attrs)
 
+      del question["program"]
       question["program_sexpr"] = sexpr
 
       if args.output_format == "plain":
