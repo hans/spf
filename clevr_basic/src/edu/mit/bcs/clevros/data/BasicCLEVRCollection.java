@@ -47,7 +47,8 @@ public class BasicCLEVRCollection extends CLEVRCollection<SingleSentence> {
 					BasicCLEVRCollection.class,
 					params.getAsFile("scenesFile"),
 					params.getAsFile("questionsFile"),
-					params.getAsBoolean("shuffle", false));
+					params.getAsBoolean("shuffle", false),
+                    params.getAsInteger("subsampleQuestions", 0));
 		}
 
 		@Override
