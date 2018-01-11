@@ -1,4 +1,4 @@
-package edu.mit.bcs.clevros.data;
+package edu.mit.bcs.clevros.situated.data;
 
 import edu.cornell.cs.nlp.spf.data.situated.labeled.LabeledSituatedSentence;
 import edu.cornell.cs.nlp.spf.data.utils.IValidator;
@@ -9,6 +9,8 @@ import edu.cornell.cs.nlp.spf.explat.resources.usage.ResourceUsage;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicLanguageServices;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
 import edu.cornell.cs.nlp.spf.mr.language.type.TypeRepository;
+import edu.mit.bcs.clevros.data.CLEVRAnswer;
+import edu.mit.bcs.clevros.data.CLEVRScene;
 
 public class CLEVRValidator<DI extends LabeledSituatedSentence<CLEVRScene, CLEVRAnswer>,
 		                    LABEL extends LogicalExpression>
