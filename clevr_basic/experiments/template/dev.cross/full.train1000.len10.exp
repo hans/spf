@@ -1,5 +1,5 @@
 include=../../params.inc
-gIter=20
+gIter=50
 outputDir=../../out/logs_full.train1000.len10
 globalLog=../../out/logs_full.train1000.len10/global.log
 

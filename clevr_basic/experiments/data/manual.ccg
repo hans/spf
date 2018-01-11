@@ -1,53 +1,62 @@
 the big metallic object
-(unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> (filter_material:<<e,t>,<pm,<e,t>>> scene:<e,t> metal:pm) large:psi))
+(unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> size:a (filter:<a,<<e,t>,<p,<e,t>>>> material:a scene:<e,t> metal:p) large:p))
 
 are there any other things that are the same shape as the big metallic object
-(exists:<<e,t>,t> (same_shape:<e,<e,t>> (unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> (filter_material:<<e,t>,<pm,<e,t>>> scene:<e,t> metal:pm) large:psi))))
+(exists:<<e,t>,t> (same:<a,<e,<e,t>>> shape:a (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> size:a (filter:<a,<<e,t>,<p,<e,t>>>> material:a scene:<e,t> metal:p) large:p))))
 
 is there a big brown object of the same shape as the green thing
-(exists:<<e,t>,t> (filter_size:<<e,t>,<psi,<e,t>>> (filter_color:<<e,t>,<pc,<e,t>>> (same_shape:<e,<e,t>> (unique:<<e,t>,e> (filter_color:<<e,t>,<pc,<e,t>>> scene:<e,t> green:pc))) brown:pc) large:psi))
+(exists:<<e,t>,t> (filter:<a,<<e,t>,<p,<e,t>>>> size:a (filter:<a,<<e,t>,<p,<e,t>>>> color:a (same:<a,<e,<e,t>>> shape:a (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> color:a scene:<e,t> green:p))) brown:p) large:p))
 
+// TODO faulty parse
 what is the material of the big purple object
-(query_material:<e,pm> (unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> (filter_color:<<e,t>,<pc,<e,t>>> scene:<e,t> purple:pc) large:psi)))
+(query:<a,<e,p>> material:a (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> size:a (filter:<a,<<e,t>,<p,<e,t>>>> color:a scene:<e,t> purple:p) large:p)))
 
 //is the purple thing the same shape as the large gray rubber thing
-//(equal_shape:<i,<i,t>> (query_shape:<e,psh> (unique:<<e,t>,e> (filter_color:<<e,t>,<pc,<e,t>>> scene:<e,t> purple:pc))) (query_shape:<e,psh> (unique:<<e,t>,e> (filter_material:<<e,t>,<pm,<e,t>>> (filter_color:<<e,t>,<pc,<e,t>>> (filter_size:<<e,t>,<psi,<e,t>>> scene:<e,t> large:psi) gray:pc)))))
+//(equal_shape:<i,<i,t>> (query:<a,<e,p>> shape:a (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> color:a scene:<e,t> purple:p))) (query:<a,<e,p>> shape:a (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> material:a (filter:<a,<<e,t>,<p,<e,t>>>> color:a (filter:<a,<<e,t>,<p,<e,t>>>> size:a scene:<e,t> large:p) gray:p)))))
 
 what number of other objects are the same size as the purple shiny object
-(count:<<e,t>,i> (same_size:<e,<e,t>> (unique:<<e,t>,e> (filter_color:<<e,t>,<pc,<e,t>>> (filter_material:<<e,t>,<pm,<e,t>>> scene:<e,t> metal:pm) purple:pc))))
+(count:<<e,t>,i> (same:<a,<e,<e,t>>> size:a (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> color:a (filter:<a,<<e,t>,<p,<e,t>>>> material:a scene:<e,t> metal:p) purple:p))))
 
 the green object and brown object
-(unique:<<e,t>,e> (intersect:<<e,t>,<<e,t>,<e,t>>> (filter_color:<<e,t>,<pc,<e,t>>> scene:<e,t> green:pc) (filter_color:<<e,t>,<pc,<e,t>>> scene:<e,t> brown:pc)))
+(unique:<<e,t>,e> (intersect:<<e,t>,<<e,t>,<e,t>>> (filter:<a,<<e,t>,<p,<e,t>>>> color:a scene:<e,t> green:p) (filter:<a,<<e,t>,<p,<e,t>>>> color:a scene:<e,t> brown:p)))
 
 the big object that is right of the brown cylinder and left of the large brown sphere
 (unique:<<e,t>,e>
- (filter_size:<<e,t>,<psi,<e,t>>>
+ (filter:<a,<<e,t>,<p,<e,t>>>> size:a
   (intersect:<<e,t>,<<e,t>,<e,t>>>
    (relate:<e,<s,<e,t>>>
-    (unique:<<e,t>,e> (filter_color:<<e,t>,<pc,<e,t>>> (filter_shape:<<e,t>,<psh,<e,t>>> scene:<e,t> cylinder:psh) brown:pc))
+    (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> color:a (filter:<a,<<e,t>,<p,<e,t>>>> shape:a scene:<e,t> cylinder:p) brown:p))
     right:s)
    (relate:<e,<s,<e,t>>>
-    (unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> (filter_color:<<e,t>,<pc,<e,t>>> (filter_shape:<<e,t>,<psh,<e,t>>> scene:<e,t> sphere:psh) brown:pc) large:psi))
+    (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> size:a (filter:<a,<<e,t>,<p,<e,t>>>> color:a (filter:<a,<<e,t>,<p,<e,t>>>> shape:a scene:<e,t> sphere:p) brown:p) large:p))
     left:s))
-  large:psi))
+  large:p))
 
+// TODO this seems to work only because the conjuncts are ordered differently in the LF than in the sentence
+// (know this because the previous sentence doen't work; it has the LF conjunct order matching surface order)
 what material is the big object that is right of the brown cylinder and left of the large brown sphere
-(query_material:<e,pm> (unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> (intersect:<<e,t>,<<e,t>,<e,t>>> (relate:<e,<s,<e,t>>> (unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> (filter_color:<<e,t>,<pc,<e,t>>> (filter_shape:<<e,t>,<psh,<e,t>>> scene:<e,t> sphere:psh) brown:pc) large:psi)) left:s) (relate:<e,<s,<e,t>>> (unique:<<e,t>,e> (filter_color:<<e,t>,<pc,<e,t>>> (filter_shape:<<e,t>,<psh,<e,t>>> scene:<e,t> cylinder:psh) brown:pc)) right:s)) large:psi)))
+(query:<a,<e,p>> material:a (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> size:a (intersect:<<e,t>,<<e,t>,<e,t>>> (relate:<e,<s,<e,t>>> (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> size:a (filter:<a,<<e,t>,<p,<e,t>>>> color:a (filter:<a,<<e,t>,<p,<e,t>>>> shape:a scene:<e,t> sphere:p) brown:p) large:p)) left:s) (relate:<e,<s,<e,t>>> (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> color:a (filter:<a,<<e,t>,<p,<e,t>>>> shape:a scene:<e,t> cylinder:p) brown:p)) right:s)) large:p)))
 
+// TODO no parse
 what number of cylinders are either big cyan things or yellow matte things
-(count:<<e,t>,i> (filter_shape:<<e,t>,<psh,<e,t>>> (union:<<e,t>,<<e,t>,<e,t>>> (filter_size:<<e,t>,<psi,<e,t>>> (filter_color:<<e,t>,<pc,<e,t>>> scene:<e,t> cyan:pc) large:psi) (filter_color:<<e,t>,<pc,<e,t>>> (filter_material:<<e,t>,<pm,<e,t>>> scene:<e,t> rubber:pm) yellow:pc)) cylinder:psh))
+(count:<<e,t>,i> (filter:<a,<<e,t>,<p,<e,t>>>> shape:a (union:<<e,t>,<<e,t>,<e,t>>> (filter:<a,<<e,t>,<p,<e,t>>>> size:a (filter:<a,<<e,t>,<p,<e,t>>>> color:a scene:<e,t> cyan:p) large:p) (filter:<a,<<e,t>,<p,<e,t>>>> color:a (filter:<a,<<e,t>,<p,<e,t>>>> material:a scene:<e,t> rubber:p) yellow:p)) cylinder:p))
 
+// TODO no parse
 is the color of the large sphere the same as the large matte cube
-(equal_color:<pc,<pc,t>> (query_color:<e,pc> (unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> (filter_shape:<<e,t>,<psh,<e,t>>> scene:<e,t> sphere:psh) large:psi))) (query_color:<e,pc> (unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> (filter_material:<<e,t>,<pm,<e,t>>> (filter_shape:<<e,t>,<psh,<e,t>>> scene:<e,t> cube:psh) rubber:pm) large:psi))))
+(equal:<p,<p,t>> (query:<a,<e,p>> color:a (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> size:a (filter:<a,<<e,t>,<p,<e,t>>>> shape:a scene:<e,t> sphere:p) large:p))) (query:<a,<e,p>> color:a (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> size:a (filter:<a,<<e,t>,<p,<e,t>>>> material:a (filter:<a,<<e,t>,<p,<e,t>>>> shape:a scene:<e,t> cube:p) rubber:p) large:p))))
 
 are there more big cylinders than large cubes
-(greater_than:<i,<i,t>> (count:<<e,t>,i> (filter_size:<<e,t>,<psi,<e,t>>> (filter_shape:<<e,t>,<psh,<e,t>>> scene:<e,t> cylinder:psh) large:psi)) (count:<<e,t>,i> (filter_size:<<e,t>,<psi,<e,t>>> (filter_shape:<<e,t>,<psh,<e,t>>> scene:<e,t> cube:psh) large:psi)))
+(greater_than:<i,<i,t>> (count:<<e,t>,i> (filter:<a,<<e,t>,<p,<e,t>>>> size:a (filter:<a,<<e,t>,<p,<e,t>>>> shape:a scene:<e,t> cylinder:p) large:p)) (count:<<e,t>,i> (filter:<a,<<e,t>,<p,<e,t>>>> size:a (filter:<a,<<e,t>,<p,<e,t>>>> shape:a scene:<e,t> cube:p) large:p)))
 
 are there more big green things than large purple shiny cubes
-(greater_than:<i,<i,t>> (count:<<e,t>,i> (filter_size:<<e,t>,<psi,<e,t>>> (filter_color:<<e,t>,<pc,<e,t>>> scene:<e,t> green:pc) large:psi)) (count:<<e,t>,i> (filter_size:<<e,t>,<psi,<e,t>>> (filter_color:<<e,t>,<pc,<e,t>>> (filter_material:<<e,t>,<pm,<e,t>>> (filter_shape:<<e,t>,<psh,<e,t>>> scene:<e,t> cube:psh) metal:pm) purple:pc) large:psi)))
+(greater_than:<i,<i,t>> (count:<<e,t>,i> (filter:<a,<<e,t>,<p,<e,t>>>> size:a (filter:<a,<<e,t>,<p,<e,t>>>> color:a scene:<e,t> green:p) large:p)) (count:<<e,t>,i> (filter:<a,<<e,t>,<p,<e,t>>>> size:a (filter:<a,<<e,t>,<p,<e,t>>>> color:a (filter:<a,<<e,t>,<p,<e,t>>>> material:a (filter:<a,<<e,t>,<p,<e,t>>>> shape:a scene:<e,t> cube:p) metal:p) purple:p) large:p)))
 
 what is the big object that is behind the blue object made of
-(query_material:<e,pm> (unique:<<e,t>,e> (filter_size:<<e,t>,<psi,<e,t>>> (relate:<e,<s,<e,t>>> (unique:<<e,t>,e> (filter_color:<<e,t>,<pc,<e,t>>> scene:<e,t> blue:pc)) behind:s) large:psi)))
+(query:<a,<e,p>> material:a
+ (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> size:a (relate:<e,<s,<e,t>>>
+                                                         (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> color:a scene:<e,t> blue:p))
+                                                         behind:s)
+                    large:p)))
 
 the cube is what color
-(query_color:<e,pc> (unique:<<e,t>,e> (filter_shape:<<e,t>,<psh,<e,t>>> scene:<e,t> cube:psh)))
+(query:<a,<e,p>> color:a (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> shape:a scene:<e,t> cube:p)))

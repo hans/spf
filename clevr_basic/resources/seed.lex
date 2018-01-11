@@ -4,6 +4,10 @@ object that is :- N/N : (lambda $0:<e,t> $0)
 
 other :- N/N : (lambda $0:<e,t> $0)
 
+what :- (S\N)/N : (lambda $0:a (lambda $1:e (query:<a,<e,p>> $0 $1)))
+color :- N : color:a
+what :- S/N : (lambda $0:p $0)
+
 cylinders :- N : (lambda $0:<e,t> (filter:<a,<<e,t>,<p,<e,t>>>> shape:a $0 cylinder:p))
 sphere :- N : (filter:<a,<<e,t>,<p,<e,t>>>> shape:a scene:<e,t> sphere:p)
 other objects :- N : (lambda $0:<e,t> $0)
@@ -27,8 +31,6 @@ the same size as :- N/N : (lambda $0:e (same:<a,<e,<e,t>>> size:a $0))
 
 are there any :- S/N : (lambda $0:<e,t> (exists:<<e,t>,t> $0))
 is there a :- S/N : (lambda $0:<e,t> (exists:<<e,t>,t> $0))
-what is the material of :- S/N : (lambda $0:e (query:<a,<e,p>> material:a $0))
-what material is :- S/N : (lambda $0:e (query:<a,<e,p>> material:a $0))
 what number of :- S/N/S : (lambda $0:<<e,t>,<e,t>> (lambda $1:<e,t> (count:<<e,t>,i> ($0 $1))))
 are :- S/S : (lambda $0:<e,t> $0)
 right of :- N/N : (lambda $0:e (relate:<e,<s,<e,t>>> $0 right:s))
@@ -36,4 +38,3 @@ left of :- N/N : (lambda $0:e (relate:<e,<s,<e,t>>> $0 left:s))
 // are there more .. than ..
 than :- (N\N)/N : (lambda $0:<e,t> (lambda $1:<e,t> (greater_than:<i,<i,t>> (count:<<e,t>,i> $1) (count:<<e,t>,i> $0)))
 are there more :- S/N : (lambda $0:t $0)
-is what color :- S\N : (lambda $0:e (query:<a,<e,p>> color:a $0))
