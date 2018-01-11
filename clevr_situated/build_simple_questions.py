@@ -36,6 +36,8 @@ def main(args):
   questions = list(itertools.chain.from_iterable(map(make_questions, scenes)))
   random.shuffle(questions)
 
+  enumerator = range(args.limit) if args.limit > 0 else itertools.count()
+
   out_data = {
       "info": {"split": "simple"},
       "questions": [
@@ -44,7 +46,7 @@ def main(args):
           "image_index": image_index,
           "answer": {"type": "object", "index": obj_index},
           "question": question
-        } for i, (image_index, question, obj_index) in enumerate(questions)
+        } for i, (image_index, question, obj_index) in zip(enumerator, questions)
         ]
       }
 
@@ -56,5 +58,6 @@ if __name__ == '__main__':
   p = ArgumentParser()
   p.add_argument("scenes_path")
   p.add_argument("out_path")
+  p.add_argument("--limit", default=0, type=int)
 
   main(p.parse_args())
