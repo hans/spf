@@ -87,7 +87,7 @@ public abstract class CLEVRCollection<DI extends ILabeledDataItem<?, ?>>
                 throw new IllegalArgumentException("subsampling without shuffling not supported");
 
             Collections.shuffle(entries);
-            entries = entries.subList(0, subsampleQuestions);
+            entries = entries.subList(0, Math.min(entries.size(), subsampleQuestions));
         }
 
         collection.addAll(entries);
