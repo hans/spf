@@ -175,7 +175,8 @@ def main(args):
     data = json.load(data_f)
     new_data = {"info": data["info"], "questions": []}
 
-    for i, question in zip(range(args.limit), data["questions"]):
+    count = 0
+    for i, question in enumerate(data["questions"]):
       sentence = process_sentence(question["question"])
 
       if args.max_len > 0 and len(sentence.strip().split()) > args.max_len:
@@ -191,12 +192,16 @@ def main(args):
       question["program_sexpr"] = sexpr
 
       new_data["questions"].append(question)
+      count += 1
 
       if args.output_format == "plain":
         out_f.write(question["question"])
         out_f.write("\n")
         out_f.write(question["program_sexpr"])
         out_f.write("\n\n")
+
+      if args.limit > 0 and count >= args.limit:
+        break
 
     if args.output_format == "json":
       json.dump(new_data, out_f)
