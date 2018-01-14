@@ -1,0 +1,25 @@
+include=../../params.inc
+gEpochs=5
+outputDir=../../out/logs_curriculum
+globalLog=../../out/logs_curriculum/global.log
+
+# Resources
+# Parser
+include=../../parser.inc
+# Model
+include=../model.inc
+# Validation function
+include=../../validation.inc
+# Lexical generator
+include=../genlex.inc
+# Training and testing sets
+include=../data.inc
+type=data.curriculum id=train stages=clevrCurriculum1,clevrCurriculum2,clevrCurriculum3 stageEpochs=0,1,2
+type=data.composite id=test sets=clevrCurriculum3
+# Learner and tester
+include=../learn.inc
+# Initializars
+include=../init.inc
+
+# Jobs
+include=../jobs.inc
