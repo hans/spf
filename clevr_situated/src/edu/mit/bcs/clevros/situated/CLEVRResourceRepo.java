@@ -57,6 +57,7 @@ import edu.cornell.cs.nlp.spf.parser.ccg.rules.lambda.typeshifting.PrepositionTy
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.primitivebinary.application.ApplicationCreator;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.primitivebinary.composition.CompositionCreator;
 import edu.mit.bcs.clevros.data.CLEVRAnswer;
+import edu.mit.bcs.clevros.situated.data.CurriculumDataCollection;
 import edu.mit.bcs.clevros.situated.data.SituatedCLEVRCollection;
 import edu.mit.bcs.clevros.data.CLEVRScene;
 import edu.mit.bcs.clevros.situated.data.CLEVRValidator;
@@ -96,6 +97,7 @@ public class CLEVRResourceRepo extends ResourceCreatorRepository {
 		registerResourceCreator(new SituatedTemplateCoarseGenlex.Creator<SituatedSentence<CLEVRScene>, LabeledSituatedSentence<CLEVRScene, CLEVRAnswer>>());
 		registerResourceCreator(new SingleSentenceCollection.Creator());
 		registerResourceCreator(new SituatedCLEVRCollection.Creator());
+		registerResourceCreator(new CurriculumDataCollection.Creator<LabeledSituatedSentence<CLEVRScene, CLEVRAnswer>>());
 		registerResourceCreator(
 				new ValidationPerceptron.Creator<Sentence, SingleSentence, LogicalExpression>());
 		registerResourceCreator(

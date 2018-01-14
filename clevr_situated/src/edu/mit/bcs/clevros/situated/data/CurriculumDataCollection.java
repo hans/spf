@@ -1,10 +1,15 @@
 package edu.mit.bcs.clevros.situated.data;
 
 import edu.cornell.cs.nlp.spf.data.IDataItem;
+import edu.cornell.cs.nlp.spf.explat.IResourceRepository;
+import edu.cornell.cs.nlp.spf.explat.ParameterizedExperiment;
+import edu.cornell.cs.nlp.spf.explat.resources.IResourceObjectCreator;
+import edu.cornell.cs.nlp.spf.explat.resources.usage.ResourceUsage;
 import edu.mit.bcs.clevros.data.IIndexableDataCollection;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Sequence of {@link edu.mit.bcs.clevros.data.IIndexableDataCollection}.
@@ -54,4 +59,32 @@ public class CurriculumDataCollection<DI extends IDataItem<?>> implements IIndex
     public Iterator<DI> iterator() {
         return currentCollection().iterator();
     }
+
+    public static class Creator<DI extends IDataItem<?>>
+            implements IResourceObjectCreator<CurriculumDataCollection<DI>> {
+
+        @Override
+        public CurriculumDataCollection<DI> create(ParameterizedExperiment.Parameters params, IResourceRepository repo) {
+            List<IIndexableDataCollection<DI>> stages = params.getSplit("stages").stream()
+                    .map((id) -> (IIndexableDataCollection<DI>) repo.get(id))
+                    .collect(Collectors.toList());
+
+            return new CurriculumDataCollection<>(stages);
+        }
+
+        @Override
+        public String type() {
+            return "data.curriculum";
+        }
+
+        @Override
+        public ResourceUsage usage() {
+            return new ResourceUsage.Builder(type(),
+                    CurriculumDataCollection.class)
+                    .setDescription("Sequence of datasets")
+                    .build();
+        }
+
+    }
+
 }
