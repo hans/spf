@@ -1,4 +1,5 @@
 object :- N : scene:<e,t>
+thing :- N : scene:<e,t>
 object :- N/N : (lambda $0:<e,t> $0)
 object that is :- N/N : (lambda $0:<e,t> $0)
 
@@ -19,6 +20,10 @@ green :- N/N : (lambda $0:<e,t> (filter:<a,<<e,t>,<p,<e,t>>>> color:a $0 green:p
 brown :- N/N : (lambda $0:<e,t> (filter:<a,<<e,t>,<p,<e,t>>>> color:a $0 brown:p))
 purple :- N/N : (lambda $0:<e,t> (filter:<a,<<e,t>,<p,<e,t>>>> color:a $0 purple:p))
 
+same :- N/N/N : (lambda $0:a (lambda $1:e (lambda $2:e (same:<a,<e,<e,t>>> $0 $1))))
+shape :- N : shape:a
+as :- N/N : (lambda $0:e $0)
+
 the :- S/N : (lambda $0:<e,t> (unique:<<e,t>,e> $0))
 the :- N/N : (lambda $0:<e,t> (unique:<<e,t>,e> $0))
 
@@ -26,7 +31,7 @@ either :- S/N : (lambda $0:<e,t> $0)
 or :- (N\N)/N : (lambda $0:<e,t> (lambda $1:<e,t> (union:<<e,t>,<<e,t>,<e,t>>> $0 $1)))
 and :- (N\N)/N : (lambda $0:<e,t> (lambda $1:<e,t> (intersect:<<e,t>,<<e,t>,<e,t>>> $0 $1)))
 
-other things that are the same shape as :- N/N : (lambda $0:e (same:<a,<e,<e,t>>> shape:a $0))
+// other things that are the same shape as :- N/N : (lambda $0:e (same:<a,<e,<e,t>>> shape:a $0))
 the same size as :- N/N : (lambda $0:e (same:<a,<e,<e,t>>> size:a $0))
 
 are there any :- S/N : (lambda $0:<e,t> (exists:<<e,t>,t> $0))
