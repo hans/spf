@@ -13,7 +13,7 @@ PROPERTY_TYPES = frozenset(["material", "color", "size", "shape"])
 
 
 def make_obj_answer(idx):
-  return {"type": "object", "index": idx}
+  return (("type", "object"), ("index", idx))
 
 
 def yield_base_questions(scene):
@@ -76,7 +76,7 @@ def main(args):
         {
           "question_index": i,
           "image_index": image_index,
-          "answer": answer,
+          "answer": dict(answer) if isinstance(answer, tuple) else answer,
           "question": question,
         } for i, (image_index, question, answer) in zip(enumerator, questions)
         ]
