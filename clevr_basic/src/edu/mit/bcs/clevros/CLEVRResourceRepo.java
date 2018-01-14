@@ -89,6 +89,7 @@ public class CLEVRResourceRepo extends ResourceCreatorRepository {
 		registerResourceCreator(new FactoredLexicon.Creator());
 		registerResourceCreator(
 				new TemplateSupervisedGenlex.Creator<Sentence, SingleSentence>());
+		registerResourceCreator(new DummyGenlex.Creator<Sentence, SingleSentence>());
 		registerResourceCreator(new SingleSentenceCollection.Creator());
 		registerResourceCreator(new BasicCLEVRCollection.Creator());
 		registerResourceCreator(
