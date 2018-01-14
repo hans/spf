@@ -95,7 +95,7 @@ public class ValidationPerceptron<SAMPLE extends IDataItem<?>, DI extends ILabel
 	private final IParser<SAMPLE, MR>	parser;
 	private final IValidator<DI, MR>	validator;
 
-	private ValidationPerceptron(int numIterations,
+	private ValidationPerceptron(int epochs, int maxIterations,
 			IDataCollection<DI> trainingData, Map<DI, MR> trainingDataDebug,
 			int lexiconGenerationBeamSize, IParser<SAMPLE, MR> parser,
 			IOutputLogger<MR> parserOutputLogger,
@@ -105,7 +105,7 @@ public class ValidationPerceptron<SAMPLE extends IDataItem<?>, DI extends ILabel
 			double margin, boolean hardUpdates, IValidator<DI, MR> validator,
 			IFilter<DI> processingFilter,
 			IParsingFilterFactory<DI, MR> parsingFilterFactory) {
-		super(numIterations, trainingData, trainingDataDebug,
+		super(epochs, maxIterations, trainingData, trainingDataDebug,
 				lexiconGenerationBeamSize, parserOutputLogger,
 				conflateGenlexAndPrunedParses, errorDriven, categoryServices,
 				genlex, processingFilter, parsingFilterFactory);
@@ -114,8 +114,8 @@ public class ValidationPerceptron<SAMPLE extends IDataItem<?>, DI extends ILabel
 		this.hardUpdates = hardUpdates;
 		this.validator = validator;
 		LOG.info(
-				"Init ValidationStocGrad: numIterations=%d, margin=%f, trainingData.size()=%d, trainingDataDebug.size()=%d  ...",
-				numIterations, margin, trainingData.size(),
+				"Init ValidationStocGrad: epochs=%d, maxIterations=%d, margin=%f, trainingData.size()=%d, trainingDataDebug.size()=%d  ...",
+				epochs, maxIterations, margin, trainingData.size(),
 				trainingDataDebug.size());
 		LOG.info("Init ValidationStocGrad: ... lexiconGenerationBeamSize=%d",
 				lexiconGenerationBeamSize);
@@ -391,6 +391,8 @@ public class ValidationPerceptron<SAMPLE extends IDataItem<?>, DI extends ILabel
 		 */
 		private boolean													conflateGenlexAndPrunedParses	= false;
 
+		private int                                                     epochs                          = 4;
+
 		private boolean													errorDriven						= false;
 
 		/**
@@ -413,8 +415,8 @@ public class ValidationPerceptron<SAMPLE extends IDataItem<?>, DI extends ILabel
 		/** Margin to scale the relative loss function */
 		private double													margin							= 1.0;
 
-		/** Number of training iterations */
-		private int														numIterations					= 4;
+		/** Max number of training iterations */
+		private int														maxIterations					= 4;
 
 		private final IParser<SAMPLE, MR>								parser;
 
@@ -455,7 +457,7 @@ public class ValidationPerceptron<SAMPLE extends IDataItem<?>, DI extends ILabel
 		}
 
 		public ValidationPerceptron<SAMPLE, DI, MR> build() {
-			return new ValidationPerceptron<SAMPLE, DI, MR>(numIterations,
+			return new ValidationPerceptron<SAMPLE, DI, MR>(epochs, maxIterations,
 					trainingData, trainingDataDebug, lexiconGenerationBeamSize,
 					parser, parserOutputLogger, conflateGenlexAndPrunedParses,
 					errorDriven, categoryServices, genlex, margin, hardUpdates,
@@ -465,6 +467,11 @@ public class ValidationPerceptron<SAMPLE extends IDataItem<?>, DI extends ILabel
 		public Builder<SAMPLE, DI, MR> setConflateGenlexAndPrunedParses(
 				boolean conflateGenlexAndPrunedParses) {
 			this.conflateGenlexAndPrunedParses = conflateGenlexAndPrunedParses;
+			return this;
+		}
+
+		public Builder<SAMPLE, DI, MR> setEpochs(int epochs) {
+			this.epochs = epochs;
 			return this;
 		}
 
@@ -497,9 +504,9 @@ public class ValidationPerceptron<SAMPLE extends IDataItem<?>, DI extends ILabel
 			return this;
 		}
 
-		public Builder<SAMPLE, DI, MR> setNumTrainingIterations(
-				int numTrainingIterations) {
-			this.numIterations = numTrainingIterations;
+		public Builder<SAMPLE, DI, MR> setMaxTrainingIterations(
+				int maxTrainingIterations) {
+			this.maxIterations = maxTrainingIterations;
 			return this;
 		}
 
@@ -603,9 +610,12 @@ public class ValidationPerceptron<SAMPLE extends IDataItem<?>, DI extends ILabel
 						(IFilter<DI>) repo.get(params.get("filter")));
 			}
 
-			if (params.contains("iter")) {
-				builder.setNumTrainingIterations(
-						Integer.valueOf(params.get("iter")));
+			if (params.contains("epochs")) {
+				builder.setEpochs(params.getAsInteger("epochs"));
+			}
+
+			if (params.contains("maxIterations")) {
+				builder.setMaxTrainingIterations(params.getAsInteger("maxIterations"));
 			}
 
 			return builder.build();
