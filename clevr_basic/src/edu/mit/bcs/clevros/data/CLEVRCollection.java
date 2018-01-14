@@ -18,6 +18,8 @@ import java.util.stream.IntStream;
 public abstract class CLEVRCollection<DI extends ILabeledDataItem<?, ?>>
         implements IIndexableDataCollection<DI> {
 
+    private static final Map<String, List<CLEVRScene>> scenesCache = new HashMap<>();
+
     protected final List<DI> entries;
     protected final boolean shuffle;
 
@@ -54,17 +56,25 @@ public abstract class CLEVRCollection<DI extends ILabeledDataItem<?, ?>>
         }
 
         try {
-            // Read scenes file.
-            curFile = scenesFile;
-            List<CLEVRScene> scenes = new ArrayList<>();
-            JSONObject scenesObj = (JSONObject) new JSONParser()
-                    .parse(new FileReader(scenesFile));
-            JSONArray allScenes = (JSONArray) scenesObj.get("scenes");
-            for (Object sceneData : allScenes) {
-                CLEVRScene scene = CLEVRScene.buildFromJSON((JSONObject) sceneData);
-                // sanity check: scenes should be sorted by idx in data
-                assert scenes.size() == scene.getImageIndex();
-                scenes.add(scene);
+            List<CLEVRScene> scenes;
+            if (scenesCache.containsKey(scenesFile.toString())) {
+                scenes = scenesCache.get(scenesFile.toString());
+            } else {
+                // Read scenes file.
+                curFile = scenesFile;
+
+                scenes = new ArrayList<>();
+                JSONObject scenesObj = (JSONObject) new JSONParser()
+                        .parse(new FileReader(scenesFile));
+                JSONArray allScenes = (JSONArray) scenesObj.get("scenes");
+                for (Object sceneData : allScenes) {
+                    CLEVRScene scene = CLEVRScene.buildFromJSON((JSONObject) sceneData);
+                    // sanity check: scenes should be sorted by idx in data
+                    assert scenes.size() == scene.getImageIndex();
+                    scenes.add(scene);
+                }
+
+                scenesCache.put(scenesFile.toString(), scenes);
             }
 
             // Read questions file.
