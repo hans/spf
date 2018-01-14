@@ -36,4 +36,12 @@ public interface IDataCollection<DI extends IDataItem<?>>
 	 * @return
 	 */
 	int size();
+
+	/**
+	 * Receive notification that trainer has reached a certain epoch.
+	 */
+	default void handleEpoch(int epoch) {
+	    // No-op.
+    }
+
 }
