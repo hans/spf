@@ -2,24 +2,51 @@ the big metallic object
 (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> size:a (filter:<a,<<e,t>,<p,<e,t>>>> material:a scene:<e,t> metal:p) large:p))
 
 are there any other things that are the same shape as the big metallic object
-(exists:<<e,t>,t> (same:<a,<e,<e,t>>> shape:a (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> size:a (filter:<a,<<e,t>,<p,<e,t>>>> material:a scene:<e,t> metal:p) large:p))))
+(exists:<<e,t>,t>
+ (same:<a,<e,<e,t>>> shape:a
+  (unique:<<e,t>,e>
+   (filter:<a,<<e,t>,<p,<e,t>>>> size:a
+    (filter:<a,<<e,t>,<p,<e,t>>>> material:a scene:<e,t> metal:p) large:p))))
 
 is there a big brown object of the same shape as the green thing
-(exists:<<e,t>,t> (filter:<a,<<e,t>,<p,<e,t>>>> size:a (filter:<a,<<e,t>,<p,<e,t>>>> color:a (same:<a,<e,<e,t>>> shape:a (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> color:a scene:<e,t> green:p))) brown:p) large:p))
+(exists:<<e,t>,t>
+ (filter:<a,<<e,t>,<p,<e,t>>>> size:a
+  (filter:<a,<<e,t>,<p,<e,t>>>> color:a
+   (same:<a,<e,<e,t>>> shape:a
+    (unique:<<e,t>,e>
+     (filter:<a,<<e,t>,<p,<e,t>>>> color:a scene:<e,t> green:p)))
+   brown:p) large:p))
 
-// TODO faulty parse
 what is the material of the big purple object
-(query:<a,<e,p>> material:a (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> size:a (filter:<a,<<e,t>,<p,<e,t>>>> color:a scene:<e,t> purple:p) large:p)))
+(query:<a,<e,p>> material:a
+ (unique:<<e,t>,e>
+  (filter:<a,<<e,t>,<p,<e,t>>>> size:a
+   (filter:<a,<<e,t>,<p,<e,t>>>> color:a scene:<e,t> purple:p) large:p)))
 
+// TODO why does this trigger an NPE when read?
 //is the purple thing the same shape as the large gray rubber thing
-//(equal_shape:<i,<i,t>> (query:<a,<e,p>> shape:a (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> color:a scene:<e,t> purple:p))) (query:<a,<e,p>> shape:a (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> material:a (filter:<a,<<e,t>,<p,<e,t>>>> color:a (filter:<a,<<e,t>,<p,<e,t>>>> size:a scene:<e,t> large:p) gray:p)))))
+//(equal:<p,<p,t>>
+// (query:<a,<e,p>> shape:a
+//  (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> color:a scene:<e,t> purple:p)))
+// (query:<a,<e,p>> shape:a
+//  (unique:<<e,t>,e>
+//   (filter:<a,<<e,t>,<p,<e,t>>>> material:a
+//    (filter:<a,<<e,t>,<p,<e,t>>>> color:a
+//     (filter:<a,<<e,t>,<p,<e,t>>>> size:a scene:<e,t> large:p) gray:p)))))
 
 what number of other objects are the same size as the purple shiny object
-(count:<<e,t>,i> (same:<a,<e,<e,t>>> size:a (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> color:a (filter:<a,<<e,t>,<p,<e,t>>>> material:a scene:<e,t> metal:p) purple:p))))
+(count:<<e,t>,i>
+ (same:<a,<e,<e,t>>> size:a
+  (unique:<<e,t>,e>
+   (filter:<a,<<e,t>,<p,<e,t>>>> color:a
+    (filter:<a,<<e,t>,<p,<e,t>>>> material:a scene:<e,t> metal:p) purple:p))))
 
-the green object and brown object
-(unique:<<e,t>,e> (intersect:<<e,t>,<<e,t>,<e,t>>> (filter:<a,<<e,t>,<p,<e,t>>>> color:a scene:<e,t> green:p) (filter:<a,<<e,t>,<p,<e,t>>>> color:a scene:<e,t> brown:p)))
-
+// DONE up to here
+// TODO this is one case in which the filter syntax really hurts us ..
+// an order-invariant AND would be fine :(
+// (need to merge [the big object] and [right of the brown ...]), when
+// each already has complete sexprs
+// but should be able to fix with type-raising, methinks
 the big object that is right of the brown cylinder and left of the large brown sphere
 (unique:<<e,t>,e>
  (filter:<a,<<e,t>,<p,<e,t>>>> size:a
@@ -37,9 +64,15 @@ the big object that is right of the brown cylinder and left of the large brown s
 what material is the big object that is right of the brown cylinder and left of the large brown sphere
 (query:<a,<e,p>> material:a (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> size:a (intersect:<<e,t>,<<e,t>,<e,t>>> (relate:<e,<s,<e,t>>> (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> size:a (filter:<a,<<e,t>,<p,<e,t>>>> color:a (filter:<a,<<e,t>,<p,<e,t>>>> shape:a scene:<e,t> sphere:p) brown:p) large:p)) left:s) (relate:<e,<s,<e,t>>> (unique:<<e,t>,e> (filter:<a,<<e,t>,<p,<e,t>>>> color:a (filter:<a,<<e,t>,<p,<e,t>>>> shape:a scene:<e,t> cylinder:p) brown:p)) right:s)) large:p)))
 
-// TODO no parse
 what number of cylinders are either big cyan things or yellow matte things
-(count:<<e,t>,i> (filter:<a,<<e,t>,<p,<e,t>>>> shape:a (union:<<e,t>,<<e,t>,<e,t>>> (filter:<a,<<e,t>,<p,<e,t>>>> size:a (filter:<a,<<e,t>,<p,<e,t>>>> color:a scene:<e,t> cyan:p) large:p) (filter:<a,<<e,t>,<p,<e,t>>>> color:a (filter:<a,<<e,t>,<p,<e,t>>>> material:a scene:<e,t> rubber:p) yellow:p)) cylinder:p))
+(count:<<e,t>,i>
+ (filter:<a,<<e,t>,<p,<e,t>>>> shape:a
+  (union:<<e,t>,<<e,t>,<e,t>>>
+   (filter:<a,<<e,t>,<p,<e,t>>>> size:a
+    (filter:<a,<<e,t>,<p,<e,t>>>> color:a scene:<e,t> cyan:p) large:p)
+   (filter:<a,<<e,t>,<p,<e,t>>>> color:a
+    (filter:<a,<<e,t>,<p,<e,t>>>> material:a scene:<e,t> rubber:p) yellow:p))
+  cylinder:p))
 
 // TODO no parse
 is the color of the large sphere the same as the large matte cube
