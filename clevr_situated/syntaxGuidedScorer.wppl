@@ -1,0 +1,96 @@
+var attributes = ['shape', 'color'];
+
+var shapes = ['sphere', 'cube', 'pyramid']
+var colors = ['red', 'blue', 'green', 'black']
+var properties = {shape: shapes, color: colors}
+
+var terms = _.concat(shapes, colors)
+var syntaxes = ['base', 'preN'];
+
+var objs = [
+  {idx: 0, shape: "sphere", color: "red"},
+  {idx: 1, shape: "cube", color: "red"},
+  {idx: 2, shape: "pyramid", color: "red"},
+
+  {idx: 3, shape: "sphere", color: "blue"},
+  {idx: 4, shape: "cube", color: "blue"},
+  {idx: 5, shape: "pyramid", color: "blue"},
+
+  {idx: 6, shape: "sphere", color: "green"},
+  {idx: 7, shape: "cube", color: "green"},
+  {idx: 8, shape: "pyramid", color: "green"},
+]
+var objsByTerm = {
+  red: [objs[0], objs[1], objs[2]],
+  blue: [objs[3], objs[4], objs[5]],
+  green: [objs[6], objs[7], objs[8]],
+
+  sphere: [objs[0], objs[3], objs[6]],
+  cube: [objs[1], objs[4], objs[7]],
+  pyramid: [objs[2], objs[5], objs[8]],
+}
+
+var observedData = [{ref: objsByTerm.sphere[0], attr: 'shape', term: 'sphere', syntax: 'base'},
+                    {ref: objsByTerm.sphere[1], attr: 'shape', term: 'sphere', syntax: 'base'},
+                    {ref: objsByTerm.sphere[2], attr: 'shape', term: 'sphere', syntax: 'base'},
+                    {ref: objsByTerm.cube[0], attr: 'shape', term: 'cube', syntax: 'base'},
+                    {ref: objsByTerm.cube[1], attr: 'shape', term: 'cube', syntax: 'base'},
+                    {ref: objsByTerm.cube[2], attr: 'shape', term: 'cube', syntax: 'base'},
+                    {ref: objsByTerm.pyramid[0], attr: 'shape', term: 'pyramid', syntax: 'base'},
+                    {ref: objsByTerm.pyramid[1], attr: 'shape', term: 'pyramid', syntax: 'base'},
+                    {ref: objsByTerm.pyramid[2], attr: 'shape', term: 'pyramid', syntax: 'base'},
+
+                    {ref: objsByTerm.red[0], attr: 'color', term: 'red', syntax: 'preN'},
+                    {ref: objsByTerm.red[1], attr: 'color', term: 'red', syntax: 'preN'},
+                    {ref: objsByTerm.red[2], attr: 'color', term: 'red', syntax: 'preN'},
+                    {ref: objsByTerm.blue[0], attr: 'color', term: 'blue', syntax: 'preN'},
+                    {ref: objsByTerm.blue[1], attr: 'color', term: 'blue', syntax: 'preN'},
+                    {ref: objsByTerm.blue[2], attr: 'color', term: 'blue', syntax: 'preN'},
+                    {ref: objsByTerm.green[0], attr: 'color', term: 'green', syntax: 'preN'},
+                    {ref: objsByTerm.green[1], attr: 'color', term: 'green', syntax: 'preN'},
+                    {ref: objsByTerm.green[2], attr: 'color', term: 'green', syntax: 'preN'}]
+
+var syntaxPrior = Dirichlet({alpha: ones([syntaxes.length, 1])})
+var termPrior = Dirichlet({alpha: ones([terms.length, 1])})
+
+var query = function(querier) {return function() {
+  // prior p(attribute type)
+  var attr = Categorical({vs: attributes})
+
+  // p(attribute value | attribute type) -- e.g. p(color | attribute type == color)
+  var attrVal = mem(function(attr) {return Categorical({vs: properties[attr], ps: ones([properties[attr].length, 1])})})
+
+  var term = mem(function(attrVal) {return Categorical({vs: terms, ps: sample(termPrior)})})
+
+  // p(syntax | attribute type)
+  var syntax = mem(function(attr) {return Categorical({vs: syntaxes, ps: sample(syntaxPrior)})})
+
+  querier(attr, attrVal, term, syntax)
+}}
+
+var posterior = Infer({method: "SMC", particles: 100},
+                     query(function(attr, attrVal, term, syntax) {
+  var obsFn = function(datum) {
+    observe(attr, datum.attr)
+    observe(attrVal(datum.attr), datum.ref[datum.attr])
+    observe(term(datum.ref[datum.attr]), datum.term)
+    observe(syntax(datum.attr), datum.syntax)
+  }
+
+  mapData({data: observedData}, obsFn)
+
+  // Sanity check: shape should be expected as a base noun.
+  // Works!
+  // return {shapeSyntax: sample(syntax("shape"))}
+
+  var qAttr = sample(attr)
+  var qAttrVal = sample(attrVal(qAttr))
+  observe(term(qAttrVal), "black")
+  observe(syntax(qAttr), "preN")
+  return {attr: qAttr,
+          attrVal: qAttrVal}
+}))
+
+JSON.stringify(map(function(val) {
+  [val, posterior.score(val)]
+}, posterior.support()))
