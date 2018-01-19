@@ -1,29 +1,16 @@
-var attributes = ['shape', 'color'];
-
 var shapes = ['sphere', 'cube', 'pyramid']
 var colors = ['red', 'blue', 'green', 'black']
-var properties = {shape: shapes, color: colors}
+var properties = {{properties}}
 
-var terms = _.concat(shapes, colors)
-var syntaxes = ['base', 'preN'];
+var terms = {{terms}}
+var syntaxes = {{syntaxes}}
 
-var syntaxPrior = {
-  "shape": Dirichlet({alpha: Vector([10, 1])}),
-  "color": Dirichlet({alpha: Vector([1, 10])})
-}
-var termPrior = {
-  "sphere": Dirichlet({alpha: ones([terms.length, 1])}),
-  "cube": Dirichlet({alpha: ones([terms.length, 1])}),
-  "pyramid": Dirichlet({alpha: ones([terms.length, 1])}),
-  "red": Dirichlet({alpha: Vector([1,1,1,10,1,1,1])}),
-  "blue": Dirichlet({alpha: Vector([1,1,1,1,10,1,1])}),
-  "green": Dirichlet({alpha: Vector([1,1,1,1,10,1,1])}),
-  "black": Dirichlet({alpha: ones([terms.length, 1])})
-}
+var syntaxPrior = {{syntaxPriors}}
+var termPrior = {{termPriors}}
 
 var query = function(querier) {return function() {
   // prior p(attribute type)
-  var attr = Categorical({vs: attributes})
+  var attr = Categorical({vs: _.keys(properties)})
 
   // p(attribute value | attribute type) -- e.g. p(color | attribute type == color)
   var attrVal = mem(function(attr) {return Categorical({vs: properties[attr], ps: ones([properties[attr].length, 1])})})

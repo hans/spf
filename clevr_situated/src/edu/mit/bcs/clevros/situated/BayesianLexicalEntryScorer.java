@@ -1,5 +1,9 @@
 package edu.mit.bcs.clevros.situated;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.samskivert.mustache.Mustache;
+import com.samskivert.mustache.Template;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Syntax;
 import edu.cornell.cs.nlp.spf.ccg.lexicon.ILexicon;
 import edu.cornell.cs.nlp.spf.ccg.lexicon.LexicalEntry;
@@ -22,10 +26,9 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -41,6 +44,7 @@ import java.util.stream.Collectors;
 public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEntry<LogicalExpression>> {
 
     private static final String SCRIPT_PATH = "run_wppl";
+    private static final String SCORER_TEMPLATE_PATH = "syntaxGuidedScorer.wppl.template";
     private static final String SCORER_PATH = "syntaxGuidedScorer.wppl";
     private File scorerFile;
 
@@ -247,13 +251,74 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         return ret;
     }
 
+    /**
+     * Prepare a webppl-friendly string describing prior distributions.
+     *
+     * @param priorDistribution
+     * @param support1 Support of the conditional distribution (e.g. attribute type, attribute value).
+     * @param support2 Support of the query distribution (e.g. syntax, term).
+     * @return
+     */
+    private <T> String buildPriorString(Map<String, Counter<T>> priorDistribution,
+                                        List<String> support1, List<T> support2) {
+        StringBuilder ret = new StringBuilder();
+        ret.append("{\n");
+
+        support1.forEach(key -> {
+            Counter<T> thisPrior = priorDistribution.computeIfAbsent(key, k -> new Counter<>());
+            String priorValueStr = support2.stream().map(val -> String.valueOf(thisPrior.get(val)))
+                    .collect(Collectors.joining(","));
+            ret.append(String.format("\t\"%s\": Dirichlet({alpha: Vector([%s])}),\n", key, priorValueStr));
+        });
+
+        ret.append("}");
+        return ret.toString();
+    }
+
+    private void buildScript() throws IOException {
+        Map<String, Counter<Syntax>> syntaxPriors = buildSyntaxPriors();
+        Map<String, Counter<String>> termPriors = buildTermPriors();
+
+        List<String> allAttributes = new ArrayList<>(ATTRIBUTE_VALUES.keySet());
+        List<String> allAttributeValues = ATTRIBUTE_VALUES.values().stream()
+                .flatMap(Collection::stream).collect(Collectors.toList());
+
+        List<String> allTerms = termPriors.values().stream()
+                .flatMap(counter -> counter.keySet().stream())
+                .distinct().collect(Collectors.toList());
+        List<Syntax> allSyntaxes = syntaxPriors.values().stream()
+                .flatMap(counter -> counter.keySet().stream())
+                .distinct().collect(Collectors.toList());
+        List<String> allSyntaxStrings = allSyntaxes.stream()
+                .map(Syntax::toString).collect(Collectors.toList());
+
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+        // Collect template variables.
+        HashMap<String, String> tData = new HashMap<>();
+        tData.put("properties", gson.toJson(ATTRIBUTE_VALUES));
+        tData.put("terms", gson.toJson(allTerms));
+        tData.put("syntaxes", gson.toJson(allSyntaxStrings));
+        tData.put("termPriors", buildPriorString(termPriors, allAttributeValues, allTerms));
+        tData.put("syntaxPriors", buildPriorString(syntaxPriors, allAttributes, allSyntaxes));
+
+        BufferedReader templateReader = new BufferedReader(new FileReader(SCORER_TEMPLATE_PATH));
+        Template tmpl = Mustache.compiler().escapeHTML(false).compile(templateReader);
+        String scoreCode = tmpl.execute(tData);
+
+        Files.write(Paths.get(SCORER_PATH), Arrays.asList(scoreCode.split("\n")));
+    }
+
     @Override
     public double score(LexicalEntry<LogicalExpression> entry) {
         if (alwaysDefault)
             return defaultScorer.score(entry);
 
-        Map<String, Counter<Syntax>> syntaxPriors = buildSyntaxPriors();
-        Map<String, Counter<String>> termPriors = buildTermPriors();
+        try {
+            buildScript();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return defaultScorer.score(entry);
     }
 

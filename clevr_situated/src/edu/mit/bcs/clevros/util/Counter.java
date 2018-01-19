@@ -2,6 +2,7 @@ package edu.mit.bcs.clevros.util;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class Counter<K> {
 
@@ -12,12 +13,20 @@ public class Counter<K> {
     }
 
     public double get(K key) {
-        return map.get(key);
+        return map.getOrDefault((K) key, 0.0);
     }
 
     public double addTo(K key, double delta) {
         double newVal = map.compute(key, (k, v) -> v == null ? delta : v + delta);
         return newVal;
+    }
+
+    public Set<K> keySet() {
+        return map.keySet();
+    }
+
+    public Set<Map.Entry<K, Double>> entrySet() {
+        return map.entrySet();
     }
 
     public void normalize() {
