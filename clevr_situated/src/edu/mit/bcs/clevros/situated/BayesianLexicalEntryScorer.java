@@ -111,28 +111,28 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
             throw new RuntimeException("cannot find scorer file at " + SCORER_PATH);
     }
 
+    private Set<LexicalEntry<LogicalExpression>> getFilterLexicalEntries() {
+        return getLexicon().toCollection().stream()
+                .filter(entry -> GetFilterArguments.of(entry.getCategory().getSemantics()) != null)
+                .collect(Collectors.toSet());
+    }
+
     /**
      * Use the lexicon to build prior distributions over syntaxes for each attribute type.
      */
     private Map<String, Counter<Syntax>> buildSyntaxPriors() {
         Map<String, Counter<Syntax>> ret = new HashMap<>();
-        Collection<LexicalEntry<LogicalExpression>> lexCollection = getLexicon().toCollection();
 
         // Collect LexicalEntry instances associated with each attribute type.
         Map<String, Set<LexicalEntry<LogicalExpression>>> entries = new HashMap<>();
-        for (LexicalEntry<LogicalExpression> entry : lexCollection) {
-            LogicalExpression semantics = entry.getCategory().getSemantics();
 
-            // Only track LFs which are filters.
-            Pair<String, String> filterArguments = GetFilterArguments.of(semantics);
-            if (filterArguments == null)
-                continue;
-
-            entries.putIfAbsent(filterArguments.first(), new HashSet<>());
+        getFilterLexicalEntries().forEach(entry -> {
+            Pair<String, String> filterArguments = GetFilterArguments.of(entry.getCategory().getSemantics());
+            entries.computeIfAbsent(filterArguments.first(), k -> new HashSet<>());
             entries.get(filterArguments.first()).add(entry);
-        }
+        });
 
-        // Now aggregate attr -> syntax weights.
+        // Now aggregate attribute type -> syntax weights.
         for (Map.Entry<String, Set<LexicalEntry<LogicalExpression>>> entry : entries.entrySet()) {
             Counter<Syntax> attrCounter = new Counter<>();
             for (LexicalEntry<LogicalExpression> lexEntry : entry.getValue()) {
@@ -145,6 +145,41 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
                 alwaysDefault = false;
 
                 attrCounter.addTo(entrySyntax, score);
+            }
+
+            attrCounter.normalize();
+            ret.put(entry.getKey(), attrCounter);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Use the lexicon to build prior distributions over terms for each attribute value.
+     */
+    private Map<String, Counter<String>> buildTermPriors() {
+        Map<String, Counter<String>> ret = new HashMap<>();
+
+        // Collect LexicalEntry instances associated with each attribute value.
+        Map<String, Set<LexicalEntry<LogicalExpression>>> entries = new HashMap<>();
+
+        getFilterLexicalEntries().forEach(entry -> {
+            Pair<String, String> filterArguments = GetFilterArguments.of(entry.getCategory().getSemantics());
+            entries.computeIfAbsent(filterArguments.second(), k -> new HashSet<>());
+            entries.get(filterArguments.second()).add(entry);
+        });
+
+        // Now aggregate attribute value -> term weights.
+        for (Map.Entry<String, Set<LexicalEntry<LogicalExpression>>> entry : entries.entrySet()) {
+            Counter<String> attrCounter = new Counter<>();
+            for (LexicalEntry<LogicalExpression> lexEntry : entry.getValue()) {
+                // Make sure this call isn't circular by forcing the score call to use the default score init function
+                // if necessary.
+                alwaysDefault = true;
+                double score = getModel().score(lexEntry);
+                alwaysDefault = false;
+
+                attrCounter.addTo(lexEntry.getTokens().toString(), score);
             }
 
             attrCounter.normalize();
@@ -217,6 +252,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
             return defaultScorer.score(entry);
 
         Map<String, Counter<Syntax>> syntaxPriors = buildSyntaxPriors();
+        Map<String, Counter<String>> termPriors = buildTermPriors();
         return defaultScorer.score(entry);
     }
 
