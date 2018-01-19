@@ -2,15 +2,19 @@ package edu.mit.bcs.clevros;
 
 import edu.cornell.cs.nlp.spf.mr.lambda.*;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.ILogicalExpressionVisitor;
-import edu.cornell.cs.nlp.spf.mr.language.type.ComplexType;
 import edu.cornell.cs.nlp.spf.mr.language.type.Type;
 import edu.cornell.cs.nlp.spf.mr.language.type.TypeRepository;
+import edu.cornell.cs.nlp.utils.composites.Pair;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-public class IsFilterInvocation implements ILogicalExpressionVisitor {
+/**
+ * Verify that the provided LogicalExpression is an instance of a filtering invocation,
+ * and retrieve the relevant filtering attribute and value.
+ */
+public class GetFilterArguments implements ILogicalExpressionVisitor {
 
     private static final Type ET_TYPE;
     private static final Set<Type> PROPERTY_TYPES = new HashSet<>();
@@ -32,16 +36,21 @@ public class IsFilterInvocation implements ILogicalExpressionVisitor {
     }
 
     private int state = 0;
-    private boolean good = false;
+    private String filterAttribute = null;
+    private String filterValue = null;
 
-    public static boolean of(LogicalExpression exp) {
-        final IsFilterInvocation visitor = new IsFilterInvocation();
+    public static Pair<String, String> of(LogicalExpression exp) {
+        final GetFilterArguments visitor = new GetFilterArguments();
         visitor.visit(exp);
-        return visitor.good;
+        return visitor.getResult();
+    }
+
+    private Pair<String, String> getResult() {
+        return filterAttribute == null ? null : Pair.of(filterAttribute, filterValue);
     }
 
     private void abort() {
-        good = false;
+        filterAttribute = null;
         state = -1;
     }
 
@@ -96,7 +105,10 @@ public class IsFilterInvocation implements ILogicalExpressionVisitor {
             }
 
             state = 3;
-            good = true;
+
+            String filterName = predConst.getBaseName();
+            filterAttribute = filterName.substring(filterName.indexOf("_") + 1);
+            filterValue = ((LogicalConstant) literal.getArg(1)).getBaseName();
         } else {
             abort();
         }

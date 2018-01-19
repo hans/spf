@@ -9,10 +9,12 @@ import edu.cornell.cs.nlp.spf.explat.resources.usage.ResourceUsage;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
 import edu.cornell.cs.nlp.spf.parser.ccg.features.basic.scorer.AbstractScaledScorerCreator;
 import edu.cornell.cs.nlp.spf.parser.ccg.features.basic.scorer.UniformScorer;
+import edu.cornell.cs.nlp.spf.parser.ccg.model.IModelImmutable;
 import edu.cornell.cs.nlp.spf.parser.ccg.model.Model;
 import edu.cornell.cs.nlp.utils.collections.IScorer;
 import edu.cornell.cs.nlp.utils.collections.ISerializableScorer;
-import edu.mit.bcs.clevros.IsFilterInvocation;
+import edu.cornell.cs.nlp.utils.composites.Pair;
+import edu.mit.bcs.clevros.GetFilterArguments;
 import edu.mit.bcs.clevros.data.CLEVRTypes;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -58,13 +60,14 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     }
 
     private ILexicon<LogicalExpression> lexicon;
-    private Model model;
+    private IModelImmutable<?, LogicalExpression> model;
     private String lexiconId;
     private String modelId;
 
     private final IResourceRepository repo;
 
     private final IScorer<LexicalEntry<LogicalExpression>> defaultScorer;
+    private boolean alwaysDefault = false;
 
     public BayesianLexicalEntryScorer(ILexicon<LogicalExpression> lexicon, Model model,
                                       IScorer<LexicalEntry<LogicalExpression>> defaultScorer) {
@@ -96,7 +99,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         return lexicon;
     }
 
-    private Model getModel() {
+    private IModelImmutable<?, LogicalExpression> getModel() {
         if (model == null)
             model = repo.get(modelId);
         return model;
@@ -111,21 +114,41 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     /**
      * Use the lexicon to build prior distributions over syntaxes for each attribute type.
      */
-    private Map<String, Counter<String>> buildSyntaxPriors() {
-        Map<String, Counter<String>> ret = new HashMap<>();
+    private Map<String, Counter<Syntax>> buildSyntaxPriors() {
+        Map<String, Counter<Syntax>> ret = new HashMap<>();
+        Collection<LexicalEntry<LogicalExpression>> lexCollection = getLexicon().toCollection();
 
         // Collect LexicalEntry instances associated with each attribute type.
-        Collection<LexicalEntry<LogicalExpression>> lexCollection = getLexicon().toCollection();
-        Map<Syntax, Set<LexicalEntry<LogicalExpression>>> entries = new HashMap<>();
+        Map<String, Set<LexicalEntry<LogicalExpression>>> entries = new HashMap<>();
         for (LexicalEntry<LogicalExpression> entry : lexCollection) {
-            Syntax entrySyntax = entry.getCategory().getSyntax();
             LogicalExpression semantics = entry.getCategory().getSemantics();
 
             // Only track LFs which are filters.
-            if (!IsFilterInvocation.of(semantics))
+            Pair<String, String> filterArguments = GetFilterArguments.of(semantics);
+            if (filterArguments == null)
                 continue;
 
-            System.out.println("still here");
+            entries.putIfAbsent(filterArguments.first(), new HashSet<>());
+            entries.get(filterArguments.first()).add(entry);
+        }
+
+        // Now aggregate attr -> syntax weights.
+        for (Map.Entry<String, Set<LexicalEntry<LogicalExpression>>> entry : entries.entrySet()) {
+            Counter<Syntax> attrCounter = new Counter<>();
+            for (LexicalEntry<LogicalExpression> lexEntry : entry.getValue()) {
+                Syntax entrySyntax = lexEntry.getCategory().getSyntax();
+
+                // Make sure this call isn't circular by forcing the score call to use the default score init function
+                // if necessary.
+                alwaysDefault = true;
+                double score = getModel().score(lexEntry);
+                alwaysDefault = false;
+
+                attrCounter.addTo(entrySyntax, score);
+            }
+
+            attrCounter.normalize();
+            ret.put(entry.getKey(), attrCounter);
         }
 
         return ret;
@@ -190,7 +213,10 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
 
     @Override
     public double score(LexicalEntry<LogicalExpression> entry) {
-        Map<String, Counter<String>> syntaxPriors = buildSyntaxPriors();
+        if (alwaysDefault)
+            return defaultScorer.score(entry);
+
+        Map<String, Counter<Syntax>> syntaxPriors = buildSyntaxPriors();
         return defaultScorer.score(entry);
     }
 

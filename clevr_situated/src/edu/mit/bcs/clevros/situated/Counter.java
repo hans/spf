@@ -22,6 +22,9 @@ public class Counter<K> {
 
     public void normalize() {
         double sum = map.values().stream().mapToDouble(Double::doubleValue).sum();
+        if (sum == 0.0)
+            return;
+
         for (K key : map.keySet())
             map.compute(key, (k, v) -> v / sum);
     }
