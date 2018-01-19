@@ -35,10 +35,10 @@ import java.util.stream.IntStream;
  * a model/lexicon which is not prepared, defaults to another Scorer
  * instance.
  */
-public class BayesianLexicalEntryScorer implements IScorer<LexicalEntry<LogicalExpression>> {
+public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEntry<LogicalExpression>> {
 
-    private static final String SCRIPT_PATH = "clevr_situated/run_wppl";
-    private static final String SCORER_PATH = "clevr_situated/syntaxGuidedScorer.wppl";
+    private static final String SCRIPT_PATH = "run_wppl";
+    private static final String SCORER_PATH = "syntaxGuidedScorer.wppl";
     private File scorerFile;
 
     private static final String QUERY_CODE =
@@ -143,18 +143,17 @@ public class BayesianLexicalEntryScorer implements IScorer<LexicalEntry<LogicalE
         @Override
         public BayesianLexicalEntryScorer createScorer(
                 ParameterizedExperiment.Parameters parameters, IResourceRepository resourceRepo) {
-            ILexicon<LogicalExpression> lexicon = resourceRepo.get(parameters.get("lexicon"));
-            Model model = resourceRepo.get(parameters.get("model"));
             IScorer<LexicalEntry<LogicalExpression>> defaultScorer = parameters.contains("defaultScorer")
                     ? resourceRepo.get(parameters.get("defaultScorer"))
                     : new UniformScorer<>(0.0);
 
-            return new BayesianLexicalEntryScorer(lexicon, model, defaultScorer);
+            return new BayesianLexicalEntryScorer(resourceRepo, parameters.get("lexicon"),
+                    parameters.get("model"), defaultScorer);
         }
 
         @Override
         public String type() {
-            return "scorer.lex.bayesian";
+            return "scorer.bayesian";
         }
 
         @Override

@@ -91,6 +91,7 @@ public class CLEVRResourceRepo extends ResourceCreatorRepository {
 				new FactoredLexicalFeatureSet.Creator<Sentence>());
 		registerResourceCreator(
 				new SkippingSensitiveLexicalEntryScorer.Creator<LogicalExpression>());
+		registerResourceCreator(new BayesianLexicalEntryScorer.Creator());
 		registerResourceCreator(
 				new LogicalExpressionCoordinationFeatureSet.Creator<Sentence>());
 		registerResourceCreator(new FactoredLexicon.Creator());

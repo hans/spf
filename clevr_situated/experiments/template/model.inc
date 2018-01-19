@@ -1,8 +1,9 @@
 ## Default scorers
 type=scorer.uniform id=uniform0Scorer   class=lexEntry  weight=0.0
+type=scorer.bayesian id=bayesianScorer defaultScorer=uniform0Scorer lexicon=lexicon model=model
 ## Features
 type=feat.logexp.coordination id=featLogexpCoordination cpp1=true cpap=true rept=true
-type=feat.lex.factored id=featLex templateScale=0.1
+type=feat.lex.factored id=featLex templateScale=0.1 entryScorer=bayesianScorer
 type=feat.lex.dynskip id=featSkip
 type=feat.rules.count id=featRules scale=0.1
 ## Lexicon
