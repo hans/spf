@@ -1,18 +1,19 @@
 package edu.mit.bcs.clevros.situated;
 
+import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Syntax;
 import edu.cornell.cs.nlp.spf.ccg.lexicon.ILexicon;
 import edu.cornell.cs.nlp.spf.ccg.lexicon.LexicalEntry;
-import edu.cornell.cs.nlp.spf.ccg.lexicon.factored.lambda.Lexeme;
 import edu.cornell.cs.nlp.spf.explat.IResourceRepository;
 import edu.cornell.cs.nlp.spf.explat.ParameterizedExperiment;
 import edu.cornell.cs.nlp.spf.explat.resources.usage.ResourceUsage;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
-import edu.cornell.cs.nlp.spf.parser.ccg.factoredlex.features.scorers.LexicalEntryLexemeBasedScorer;
 import edu.cornell.cs.nlp.spf.parser.ccg.features.basic.scorer.AbstractScaledScorerCreator;
 import edu.cornell.cs.nlp.spf.parser.ccg.features.basic.scorer.UniformScorer;
 import edu.cornell.cs.nlp.spf.parser.ccg.model.Model;
 import edu.cornell.cs.nlp.utils.collections.IScorer;
 import edu.cornell.cs.nlp.utils.collections.ISerializableScorer;
+import edu.mit.bcs.clevros.IsFilterInvocation;
+import edu.mit.bcs.clevros.data.CLEVRTypes;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -24,7 +25,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * A scorer which uses a Bayesian model to compute prior weights
@@ -50,32 +50,93 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     private static final List<String> QUERY_VARS = Arrays.asList("attr", "attrVal");
     private static final Set<String> QUERY_VARS_SET = new HashSet<>(QUERY_VARS);
 
-    private final ILexicon<LogicalExpression> lexicon;
-    private final Model model;
+    private static final List<String> ATTRIBUTES = Arrays.asList("shape", "color");
+    private static final Map<String, List<String>> ATTRIBUTE_VALUES = new HashMap<>();
+    static {
+        ATTRIBUTE_VALUES.put("shape", Arrays.asList(CLEVRTypes.SHAPES));
+        ATTRIBUTE_VALUES.put("color", Arrays.asList(CLEVRTypes.COLORS));
+    }
+
+    private ILexicon<LogicalExpression> lexicon;
+    private Model model;
+    private String lexiconId;
+    private String modelId;
+
+    private final IResourceRepository repo;
 
     private final IScorer<LexicalEntry<LogicalExpression>> defaultScorer;
 
     public BayesianLexicalEntryScorer(ILexicon<LogicalExpression> lexicon, Model model,
                                       IScorer<LexicalEntry<LogicalExpression>> defaultScorer) {
+        this.repo = null;
         this.lexicon = lexicon;
         this.model = model;
         this.defaultScorer = defaultScorer;
 
+        checkScorer();
+    }
+
+    /**
+     * HACK: when loading from experiment files, this class may be instantiated before lexicon, model are ready for
+     * access. Store their IDs instead and lazy-load them.
+     */
+    public BayesianLexicalEntryScorer(IResourceRepository repo, String lexiconId, String modelId,
+                                      IScorer<LexicalEntry<LogicalExpression>> defaultScorer) {
+        this.repo = repo;
+        this.lexiconId = lexiconId;
+        this.modelId = modelId;
+        this.defaultScorer = defaultScorer;
+
+        checkScorer();
+    }
+
+    private ILexicon<LogicalExpression> getLexicon() {
+        if (lexicon == null)
+            lexicon = repo.get(lexiconId);
+        return lexicon;
+    }
+
+    private Model getModel() {
+        if (model == null)
+            model = repo.get(modelId);
+        return model;
+    }
+
+    private void checkScorer() {
         scorerFile = new File(SCORER_PATH);
         if (!scorerFile.exists())
             throw new RuntimeException("cannot find scorer file at " + SCORER_PATH);
+    }
+
+    /**
+     * Use the lexicon to build prior distributions over syntaxes for each attribute type.
+     */
+    private Map<String, Counter<String>> buildSyntaxPriors() {
+        Map<String, Counter<String>> ret = new HashMap<>();
+
+        // Collect LexicalEntry instances associated with each attribute type.
+        Collection<LexicalEntry<LogicalExpression>> lexCollection = getLexicon().toCollection();
+        Map<Syntax, Set<LexicalEntry<LogicalExpression>>> entries = new HashMap<>();
+        for (LexicalEntry<LogicalExpression> entry : lexCollection) {
+            Syntax entrySyntax = entry.getCategory().getSyntax();
+            LogicalExpression semantics = entry.getCategory().getSemantics();
+
+            // Only track LFs which are filters.
+            if (!IsFilterInvocation.of(semantics))
+                continue;
+
+            System.out.println("still here");
+        }
+
+        return ret;
     }
 
     private JSONArray runScorer() {
         try {
             Process proc = Runtime.getRuntime().exec(new String[]{SCRIPT_PATH, SCORER_PATH});
             BufferedReader outReader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-            JSONArray scores = (JSONArray) new JSONParser().parse(outReader);
-            return scores;
-        } catch (IOException e) {
-            // TODO
-            return null;
-        } catch (ParseException e) {
+            return (JSONArray) new JSONParser().parse(outReader);
+        } catch (IOException | ParseException e) {
             e.printStackTrace();
             System.exit(1);
             return null;
@@ -102,6 +163,9 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         return ret;
     }
 
+    /**
+     * Execute the prepared Bayesian model and return marginal distributions for each of {@link #QUERY_VARS}.
+     */
     private Map<String, Counter<String>> getMarginalizedScores() {
         Map<List<String>, Double> fullTable = getScores();
         Map<String, Counter<String>> ret = new HashMap<>();
@@ -126,7 +190,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
 
     @Override
     public double score(LexicalEntry<LogicalExpression> entry) {
-        // TODO
+        Map<String, Counter<String>> syntaxPriors = buildSyntaxPriors();
         return defaultScorer.score(entry);
     }
 
