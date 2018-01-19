@@ -16,6 +16,7 @@ import edu.cornell.cs.nlp.utils.collections.ISerializableScorer;
 import edu.cornell.cs.nlp.utils.composites.Pair;
 import edu.mit.bcs.clevros.GetFilterArguments;
 import edu.mit.bcs.clevros.data.CLEVRTypes;
+import edu.mit.bcs.clevros.util.Counter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
