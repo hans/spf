@@ -6,6 +6,6 @@ gBeam=50
 lexbeam=500
 gEpochs=5
 gMaxIterations=0
-gThreads=10
+gThreads=2
 wordSkippingCost=-1.0
 trainingMaxSentenceLength=50
