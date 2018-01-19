@@ -2,9 +2,16 @@ package edu.mit.bcs.clevros.situated;
 
 import edu.cornell.cs.nlp.spf.ccg.lexicon.ILexicon;
 import edu.cornell.cs.nlp.spf.ccg.lexicon.LexicalEntry;
+import edu.cornell.cs.nlp.spf.ccg.lexicon.factored.lambda.Lexeme;
+import edu.cornell.cs.nlp.spf.explat.IResourceRepository;
+import edu.cornell.cs.nlp.spf.explat.ParameterizedExperiment;
+import edu.cornell.cs.nlp.spf.explat.resources.usage.ResourceUsage;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
+import edu.cornell.cs.nlp.spf.parser.ccg.factoredlex.features.scorers.LexicalEntryLexemeBasedScorer;
+import edu.cornell.cs.nlp.spf.parser.ccg.features.basic.scorer.AbstractScaledScorerCreator;
 import edu.cornell.cs.nlp.spf.parser.ccg.features.basic.scorer.UniformScorer;
 import edu.cornell.cs.nlp.spf.parser.ccg.model.Model;
+import edu.cornell.cs.nlp.utils.collections.IScorer;
 import edu.cornell.cs.nlp.utils.collections.ISerializableScorer;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -28,7 +35,7 @@ import java.util.stream.IntStream;
  * a model/lexicon which is not prepared, defaults to another Scorer
  * instance.
  */
-public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEntry<LogicalExpression>> {
+public class BayesianLexicalEntryScorer implements IScorer<LexicalEntry<LogicalExpression>> {
 
     private static final String SCRIPT_PATH = "clevr_situated/run_wppl";
     private static final String SCORER_PATH = "clevr_situated/syntaxGuidedScorer.wppl";
@@ -46,14 +53,10 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     private final ILexicon<LogicalExpression> lexicon;
     private final Model model;
 
-    private final ISerializableScorer<LexicalEntry<LogicalExpression>> defaultScorer;
-
-    public BayesianLexicalEntryScorer(ILexicon<LogicalExpression> lexicon, Model model) {
-        this(lexicon, model, new UniformScorer<>(0.0));
-    }
+    private final IScorer<LexicalEntry<LogicalExpression>> defaultScorer;
 
     public BayesianLexicalEntryScorer(ILexicon<LogicalExpression> lexicon, Model model,
-                                      ISerializableScorer<LexicalEntry<LogicalExpression>> defaultScorer) {
+                                      IScorer<LexicalEntry<LogicalExpression>> defaultScorer) {
         this.lexicon = lexicon;
         this.model = model;
         this.defaultScorer = defaultScorer;
@@ -122,14 +125,49 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     }
 
     @Override
-    public double score(LexicalEntry<LogicalExpression> logicalExpressionLexicalEntry) {
+    public double score(LexicalEntry<LogicalExpression> entry) {
         // TODO
-        return 0;
+        return defaultScorer.score(entry);
     }
 
     public static void main(String[] args) {
-        BayesianLexicalEntryScorer s = new BayesianLexicalEntryScorer(null, null);
+        BayesianLexicalEntryScorer s = new BayesianLexicalEntryScorer(null, null, new UniformScorer<>(0.0));
         s.getMarginalizedScores();
+    }
+
+    public static class Creator
+            extends
+            AbstractScaledScorerCreator<LexicalEntry<LogicalExpression>, BayesianLexicalEntryScorer> {
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public BayesianLexicalEntryScorer createScorer(
+                ParameterizedExperiment.Parameters parameters, IResourceRepository resourceRepo) {
+            ILexicon<LogicalExpression> lexicon = resourceRepo.get(parameters.get("lexicon"));
+            Model model = resourceRepo.get(parameters.get("model"));
+            IScorer<LexicalEntry<LogicalExpression>> defaultScorer = parameters.contains("defaultScorer")
+                    ? resourceRepo.get(parameters.get("defaultScorer"))
+                    : new UniformScorer<>(0.0);
+
+            return new BayesianLexicalEntryScorer(lexicon, model, defaultScorer);
+        }
+
+        @Override
+        public String type() {
+            return "scorer.lex.bayesian";
+        }
+
+        @Override
+        public ResourceUsage usage() {
+            return new ResourceUsage.Builder(type(),
+                    BayesianLexicalEntryScorer.class)
+                    .addParam("scale", "double", "Scaling factor")
+                    .addParam("defaultScorer", "id", "Default scorer")
+                    .addParam("lexicon", "id", "")
+                    .addParam("model", "id", "")
+                    .build();
+        }
+
     }
 
 }
