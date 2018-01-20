@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import edu.cornell.cs.nlp.spf.base.hashvector.HashVectorFactory;
 import edu.cornell.cs.nlp.spf.base.hashvector.HashVectorFactory.Type;
@@ -36,6 +37,7 @@ import edu.cornell.cs.nlp.spf.data.utils.IValidator;
 import edu.cornell.cs.nlp.spf.explat.DistributedExperiment;
 import edu.cornell.cs.nlp.spf.explat.Job;
 import edu.cornell.cs.nlp.spf.explat.resources.ResourceCreatorRepository;
+import edu.cornell.cs.nlp.spf.genlex.ccg.ILexiconGenerator;
 import edu.cornell.cs.nlp.spf.learn.ILearner;
 import edu.cornell.cs.nlp.spf.mr.lambda.*;
 import edu.cornell.cs.nlp.spf.mr.lambda.ccg.LogicalExpressionCategoryServices;
@@ -48,6 +50,7 @@ import edu.cornell.cs.nlp.utils.log.Logger;
 import edu.cornell.cs.nlp.utils.log.LoggerFactory;
 import edu.mit.bcs.clevros.data.CLEVRAnswer;
 import edu.mit.bcs.clevros.data.CLEVRScene;
+import edu.mit.bcs.clevros.genlex.ccg.template.coarse.SituatedTemplateCoarseGenlex;
 import edu.mit.bcs.clevros.situated.test.ExactMatchSituatedTestingStatistics;
 import edu.mit.bcs.clevros.situated.test.SituatedTester;
 
@@ -161,9 +164,13 @@ public class SituatedCLEVRExperiment extends DistributedExperiment {
 		// Register genlex as a model listener
 		// //////////////////////////////////////////////////
 
-		IModelListener<LogicalExpression> genlex = get("genlex");
+		SituatedTemplateCoarseGenlex genlex = get("genlex");
 		Model<?, LogicalExpression> model = get("model");
 		model.registerListener(genlex);
+		// Use seed lexicon to generate LF templates.
+		genlex.addTemplates(semiFactored.toCollection().stream()
+				.map(entry -> FactoringServices.factor(entry).getTemplate())
+				.collect(Collectors.toList()));
 
 		// //////////////////////////////////////////////////
 		// Fetch custom Bayesian scorer.

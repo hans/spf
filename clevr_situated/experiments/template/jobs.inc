@@ -1,6 +1,7 @@
 ## Jobs
 # Initialize
-type=init model=model init=initWeights,initSeedLex,initSeedLexWeights,initSeedXemeWeights id=init
+#type=init model=model init=initWeights,initSeedLex,initSeedLexWeights,initSeedXemeWeights id=init
+type=init model=model init=initWeights id=init
 # Log initial model
 type=log id=log.pre model=model logger=loggerModel dep=init
 # Learning

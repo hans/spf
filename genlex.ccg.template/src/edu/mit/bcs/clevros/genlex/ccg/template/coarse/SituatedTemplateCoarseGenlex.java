@@ -208,6 +208,10 @@ public class SituatedTemplateCoarseGenlex<SAMPLE extends Sentence, DI extends IL
 	public void lexicalEntryAdded(LexicalEntry<LogicalExpression> entry) {
 		final LexicalTemplate template = FactoringServices.factor(entry)
 				.getTemplate();
+		addTemplate(template);
+	}
+
+	public void addTemplate(LexicalTemplate template) {
 		if (coarseRepository.addTemplate(template)) {
 			LOG.info(
 					"Coars-to-fine GENLEX: added a new coarse template (-> %d): %s",
@@ -218,6 +222,11 @@ public class SituatedTemplateCoarseGenlex<SAMPLE extends Sentence, DI extends IL
 					"Coars-to-fine GENLEX: added a new fine template (-> %d): %s",
 					fineRepository.numTemplates(), template);
 		}
+	}
+
+	public void addTemplates(List<LexicalTemplate> templates) {
+		for (final LexicalTemplate template : templates)
+			addTemplate(template);
 	}
 
 	public static class Builder<SAMPLE extends Sentence, DI extends ILabeledDataItem<SAMPLE, ?>> {
