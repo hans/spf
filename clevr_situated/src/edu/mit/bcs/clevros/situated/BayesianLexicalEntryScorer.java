@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
  */
 public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEntry<LogicalExpression>> {
 
-    private static final String SCRIPT_PATH = "run_wppl";
+    private static final String SCRIPT_PATH = "./run_wppl";
     private static final String SCORER_TEMPLATE_PATH = "syntaxGuidedScorer.wppl.template";
     private static final String SCORER_PATH = "syntaxGuidedScorer.wppl";
     private File scorerFile;
@@ -196,7 +196,10 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
 
     private JSONArray runScorer() {
         try {
-            Process proc = Runtime.getRuntime().exec(new String[]{SCRIPT_PATH, SCORER_PATH});
+            ProcessBuilder pb = new ProcessBuilder(SCRIPT_PATH, SCORER_PATH);
+            pb.redirectError(new File("/dev/null"));
+            Process proc = pb.start();
+
             BufferedReader outReader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
             return (JSONArray) new JSONParser().parse(outReader);
         } catch (IOException | ParseException e) {
@@ -213,7 +216,8 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         for (Object scoreEl : scores) {
             JSONArray scoreTuple = (JSONArray) scoreEl;
             JSONObject supportEl = (JSONObject) scoreTuple.get(0);
-            double score = (double) scoreTuple.get(1);
+            double score = scoreTuple.get(1) instanceof Long
+                    ? (double) (long) scoreTuple.get(1) : (double) scoreTuple.get(1);
 
             if (!supportEl.keySet().equals(QUERY_VARS_SET))
                 throw new RuntimeException("did not receive expected query data");
@@ -235,9 +239,6 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
 
         for (int i = 0; i < QUERY_VARS.size(); i++) {
             String var = QUERY_VARS.get(i);
-            final int idx = i;
-            Set<String> support = fullTable.keySet().stream().map((tuple) -> tuple.get(idx))
-                    .collect(Collectors.toSet());
 
             Counter<String> marginalized = new Counter<>();
             for (Map.Entry<List<String>, Double> entry : fullTable.entrySet()) {
@@ -316,6 +317,8 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
 
         try {
             buildScript();
+            Map<String, Counter<String>> marginalized = getMarginalizedScores();
+            System.out.println(marginalized);
         } catch (IOException e) {
             e.printStackTrace();
         }
