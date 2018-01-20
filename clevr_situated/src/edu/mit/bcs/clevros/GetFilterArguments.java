@@ -35,7 +35,16 @@ public class GetFilterArguments implements ILogicalExpressionVisitor {
         }
     }
 
-    private int state = 0;
+    /**
+     * 0 = not yet determined; 1 or 2 denote the following expected structures:
+     *
+     * Type 1 structure:
+     * Type 2 structure: (lambda $0:e (filter_color:<<e,t>,<pc,<e,t>>> (lambda $1:e (scene:<e,t> $1)) green:pc $0))
+     */
+    private int lambdaStructureType = 0;
+
+    private int step = 0;
+
     private String filterAttribute = null;
     private String filterValue = null;
 
@@ -51,28 +60,29 @@ public class GetFilterArguments implements ILogicalExpressionVisitor {
 
     private void abort() {
         filterAttribute = null;
-        state = -1;
+        step = -1;
     }
 
     @Override
     public void visit(Lambda lambda) {
         TypeRepository repo = LogicLanguageServices.getTypeRepository();
 
-        if (state == 0) {
-            if (!lambda.getArgument().getType().equals(ET_TYPE)) {
-                abort();
-                return;
+        if (step == 0) {
+            if (lambda.getArgument().getType().equals(ET_TYPE)) {
+                lambdaStructureType = 1;
+            } else if (lambda.getArgument().getType().equals(repo.getEntityType())) {
+                lambdaStructureType = 2;
             }
 
-            state = 1;
+            step++;
             lambda.getBody().accept(this);
-        } else if (state == 1) {
-            if (!lambda.getArgument().getType().equals(repo.getEntityType())) {
+        } else if (step == 1) {
+            if (lambdaStructureType == 1 && lambda.getArgument().getType().equals(repo.getEntityType())) {
                 abort();
                 return;
             }
 
-            state = 2;
+            step++;
             lambda.getBody().accept(this);
         } else {
             abort();
@@ -81,7 +91,7 @@ public class GetFilterArguments implements ILogicalExpressionVisitor {
 
     @Override
     public void visit(Literal literal) {
-        if (state == 2) {
+        if ((lambdaStructureType == 1 && step == 2) || (lambdaStructureType == 2 && step == 1)) {
             LogicalExpression pred = literal.getPredicate();
             if (!(pred instanceof LogicalConstant)) {
                 abort();
@@ -104,7 +114,7 @@ public class GetFilterArguments implements ILogicalExpressionVisitor {
                 return;
             }
 
-            state = 3;
+            step++;
 
             String filterName = predConst.getBaseName();
             filterAttribute = filterName.substring(filterName.indexOf("_") + 1);
