@@ -49,10 +49,10 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     private File scorerFile;
 
     private static final String QUERY_CODE =
-                    "var qAttr = sample(attr);" +
-                    "var qAttrVal = sample(attrVal);" +
-                    "observe(term(qAttrVal), %s);" +
-                    "observe(syntax(qAttr), %s);" +
+                    "var qAttr = sample(attr);\n" +
+                    "var qAttrVal = sample(attrVal(qAttr));\n" +
+                    "observe(term(qAttrVal), \"%s\");\n" +
+                    "observe(syntax(qAttr), \"%s\");\n" +
                     "return {attr: qAttr, attrVal: qAttrVal}";
     private static final List<String> QUERY_VARS = Arrays.asList("attr", "attrVal");
     private static final Set<String> QUERY_VARS_SET = new HashSet<>(QUERY_VARS);
@@ -72,7 +72,9 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     private final IResourceRepository repo;
 
     private final IScorer<LexicalEntry<LogicalExpression>> defaultScorer;
-    private boolean alwaysDefault = false;
+    private static final Set<Syntax> SUPPORTED_SYNTAXES =
+            new HashSet<>(Arrays.asList(Syntax.read("N"), Syntax.read("N/N")));
+    private boolean alwaysDefault = true;
 
     public BayesianLexicalEntryScorer(ILexicon<LogicalExpression> lexicon, Model model,
                                       IScorer<LexicalEntry<LogicalExpression>> defaultScorer) {
@@ -96,6 +98,14 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         this.defaultScorer = defaultScorer;
 
         checkScorer();
+    }
+
+    public void enable() {
+        alwaysDefault = false;
+    }
+
+    public void disable() {
+        alwaysDefault = true;
     }
 
     private ILexicon<LogicalExpression> getLexicon() {
@@ -139,7 +149,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
 
         // Now aggregate attribute type -> syntax weights.
         for (Map.Entry<String, Set<LexicalEntry<LogicalExpression>>> entry : entries.entrySet()) {
-            Counter<Syntax> attrCounter = new Counter<>();
+            Counter<Syntax> attrCounter = new Counter<>(1.0);
             for (LexicalEntry<LogicalExpression> lexEntry : entry.getValue()) {
                 Syntax entrySyntax = lexEntry.getCategory().getSyntax();
 
@@ -162,7 +172,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     /**
      * Use the lexicon to build prior distributions over terms for each attribute value.
      */
-    private Map<String, Counter<String>> buildTermPriors() {
+    private Map<String, Counter<String>> buildTermPriors(LexicalEntry<?> queryEntry) {
         Map<String, Counter<String>> ret = new HashMap<>();
 
         // Collect LexicalEntry instances associated with each attribute value.
@@ -176,7 +186,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
 
         // Now aggregate attribute value -> term weights.
         for (Map.Entry<String, Set<LexicalEntry<LogicalExpression>>> entry : entries.entrySet()) {
-            Counter<String> attrCounter = new Counter<>();
+            Counter<String> attrCounter = new Counter<>(1.0);
             for (LexicalEntry<LogicalExpression> lexEntry : entry.getValue()) {
                 // Make sure this call isn't circular by forcing the score call to use the default score init function
                 // if necessary.
@@ -191,13 +201,16 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
             ret.put(entry.getKey(), attrCounter);
         }
 
+        // Make sure that at least one distribution has the query term in its support.
+        ret.values().iterator().next().get(queryEntry.getTokens().toString());
+
         return ret;
     }
 
     private JSONArray runScorer() {
         try {
             ProcessBuilder pb = new ProcessBuilder(SCRIPT_PATH, SCORER_PATH);
-            pb.redirectError(new File("/dev/null"));
+            pb.redirectError(new File("err.out"));
             Process proc = pb.start();
 
             BufferedReader outReader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
@@ -209,9 +222,9 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         }
     }
 
-    private Map<List<String>, Double> getScores() {
+    private Counter<List<String>> getScores() {
         JSONArray scores = runScorer();
-        Map<List<String>, Double> ret = new HashMap<>();
+        Counter<List<String>> ret = new Counter<>();
 
         for (Object scoreEl : scores) {
             JSONArray scoreTuple = (JSONArray) scoreEl;
@@ -224,7 +237,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
 
             List<String> values = QUERY_VARS.stream().map((var) -> (String) supportEl.get(var))
                     .collect(Collectors.toList());
-            ret.put(Collections.unmodifiableList(values), score);
+            ret.put(values, score);
         }
 
         return ret;
@@ -234,7 +247,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
      * Execute the prepared Bayesian model and return marginal distributions for each of {@link #QUERY_VARS}.
      */
     private Map<String, Counter<String>> getMarginalizedScores() {
-        Map<List<String>, Double> fullTable = getScores();
+        Counter<List<String>> fullTable = getScores();
         Map<String, Counter<String>> ret = new HashMap<>();
 
         for (int i = 0; i < QUERY_VARS.size(); i++) {
@@ -266,7 +279,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         ret.append("{\n");
 
         support1.forEach(key -> {
-            Counter<T> thisPrior = priorDistribution.computeIfAbsent(key, k -> new Counter<>());
+            Counter<T> thisPrior = priorDistribution.computeIfAbsent(key, k -> new Counter<>(1.0));
             String priorValueStr = support2.stream().map(val -> String.valueOf(thisPrior.get(val)))
                     .collect(Collectors.joining(","));
             ret.append(String.format("\t\"%s\": Dirichlet({alpha: Vector([%s])}),\n", key, priorValueStr));
@@ -276,9 +289,9 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         return ret.toString();
     }
 
-    private void buildScript() throws IOException {
+    private void buildScript(LexicalEntry<LogicalExpression> entry) throws IOException {
         Map<String, Counter<Syntax>> syntaxPriors = buildSyntaxPriors();
-        Map<String, Counter<String>> termPriors = buildTermPriors();
+        Map<String, Counter<String>> termPriors = buildTermPriors(entry);
 
         List<String> allAttributes = new ArrayList<>(ATTRIBUTE_VALUES.keySet());
         List<String> allAttributeValues = ATTRIBUTE_VALUES.values().stream()
@@ -302,6 +315,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         tData.put("syntaxes", gson.toJson(allSyntaxStrings));
         tData.put("termPriors", buildPriorString(termPriors, allAttributeValues, allTerms));
         tData.put("syntaxPriors", buildPriorString(syntaxPriors, allAttributes, allSyntaxes));
+        tData.put("queryCode", String.format(QUERY_CODE, entry.getTokens(), entry.getCategory().getSyntax()));
 
         BufferedReader templateReader = new BufferedReader(new FileReader(SCORER_TEMPLATE_PATH));
         Template tmpl = Mustache.compiler().escapeHTML(false).compile(templateReader);
@@ -315,10 +329,19 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         if (alwaysDefault)
             return defaultScorer.score(entry);
 
+        // DEV: We only deal with a restricted syntax for now!
+        if (!SUPPORTED_SYNTAXES.contains(entry.getCategory().getSyntax()))
+            return defaultScorer.score(entry);
+
+        // DEV: Only deal with particular semantics for now!
+        if (GetFilterArguments.of(entry.getCategory().getSemantics()) == null)
+            return defaultScorer.score(entry);
+
         try {
-            buildScript();
-            Map<String, Counter<String>> marginalized = getMarginalizedScores();
-            System.out.println(marginalized);
+            buildScript(entry);
+            //Map<String, Counter<String>> marginalized = getMarginalizedScores();
+            Counter<List<String>> scores = getScores();
+            System.out.printf("%s %s %s %s\n", entry.getTokens(), entry.getCategory().getSemantics(), entry.getCategory().getSyntax(), scores);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -340,7 +363,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
                 ParameterizedExperiment.Parameters parameters, IResourceRepository resourceRepo) {
             IScorer<LexicalEntry<LogicalExpression>> defaultScorer = parameters.contains("defaultScorer")
                     ? resourceRepo.get(parameters.get("defaultScorer"))
-                    : new UniformScorer<>(0.0);
+                    : new UniformScorer<>(1.0);
 
             return new BayesianLexicalEntryScorer(resourceRepo, parameters.get("lexicon"),
                     parameters.get("model"), defaultScorer);

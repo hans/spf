@@ -1,24 +1,33 @@
 package edu.mit.bcs.clevros.util;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Counter<K> {
 
+    private final double defaultValue;
     private final Map<K, Double> map;
 
     public Counter() {
+        this(0.0);
+    }
+
+    public Counter(double defaultValue) {
+        this.defaultValue = defaultValue;
         this.map = new HashMap<>();
     }
 
     public double get(K key) {
-        return map.getOrDefault((K) key, 0.0);
+        return map.computeIfAbsent(key, k -> defaultValue);
+    }
+
+    public void put(K key, double value) {
+        map.put(key, value);
     }
 
     public double addTo(K key, double delta) {
-        double newVal = map.compute(key, (k, v) -> v == null ? delta : v + delta);
-        return newVal;
+        return map.compute(key, (k, v) -> v == null
+                ? defaultValue + delta : v + delta);
     }
 
     public Set<K> keySet() {
@@ -36,5 +45,14 @@ public class Counter<K> {
 
         for (K key : map.keySet())
             map.compute(key, (k, v) -> v / sum);
+    }
+
+    @Override
+    public String toString() {
+        String sortedEntriesStr = entrySet()
+                .stream().sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
+                .map(entry -> String.format("%s=>%.3f", entry.getKey(), entry.getValue()))
+                .collect(Collectors.joining(","));
+        return "Counter{" + sortedEntriesStr + "}";
     }
 }

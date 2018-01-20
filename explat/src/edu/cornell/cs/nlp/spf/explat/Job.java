@@ -82,6 +82,7 @@ public abstract class Job extends LoggingRunnable {
 		try {
 			doJob();
 		} catch (final Throwable e) {
+			e.printStackTrace();
 			jobListener.jobException(this, e);
 			return;
 		}

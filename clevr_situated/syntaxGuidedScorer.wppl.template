@@ -1,5 +1,3 @@
-var shapes = ['sphere', 'cube', 'pyramid']
-var colors = ['red', 'blue', 'green', 'black']
 var properties = {{properties}}
 
 var terms = {{terms}}
@@ -13,7 +11,9 @@ var query = function(querier) {return function() {
   var attr = Categorical({vs: _.keys(properties)})
 
   // p(attribute value | attribute type) -- e.g. p(color | attribute type == color)
-  var attrVal = mem(function(attr) {return Categorical({vs: properties[attr], ps: ones([properties[attr].length, 1])})})
+  var attrVal = mem(function(attr) {
+    return Categorical({vs: properties[attr], ps: ones([properties[attr].length, 1])})
+  })
 
   var term = mem(function(attrVal) {
     return Categorical({vs: terms, ps: sample(termPrior[attrVal])})
@@ -29,12 +29,7 @@ var query = function(querier) {return function() {
 
 var posterior = Infer({method: "SMC", particles: 100},
                      query(function(attr, attrVal, term, syntax) {
-  var qAttr = sample(attr)
-  var qAttrVal = sample(attrVal(qAttr))
-  observe(term(qAttrVal), "black")
-  observe(syntax(qAttr), "preN")
-  return {attr: qAttr,
-          attrVal: qAttrVal}
+  {{queryCode}}
 }))
 
 JSON.stringify(map(function(val) {

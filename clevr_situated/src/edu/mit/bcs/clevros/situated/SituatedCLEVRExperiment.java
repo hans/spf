@@ -57,6 +57,8 @@ public class SituatedCLEVRExperiment extends DistributedExperiment {
 
 	private final LogicalExpressionCategoryServices	categoryServices;
 
+	private final BayesianLexicalEntryScorer bayesianScorer;
+
 	public SituatedCLEVRExperiment(File initFile) throws IOException {
 		this(initFile, Collections.<String, String> emptyMap(),
 				new CLEVRResourceRepo());
@@ -162,6 +164,13 @@ public class SituatedCLEVRExperiment extends DistributedExperiment {
 		IModelListener<LogicalExpression> genlex = get("genlex");
 		Model<?, LogicalExpression> model = get("model");
 		model.registerListener(genlex);
+
+		// //////////////////////////////////////////////////
+		// Fetch custom Bayesian scorer.
+		// //////////////////////////////////////////////////
+		bayesianScorer = get("bayesianScorer");
+		// Disable during e.g. model init.
+		bayesianScorer.disable();
 
 		// //////////////////////////////////////////////////
 		// Create jobs
@@ -330,6 +339,9 @@ public class SituatedCLEVRExperiment extends DistributedExperiment {
 
 				// Start job
 				LOG.info("============ (Job %s started)", getId());
+
+				LOG.info("Enabling Bayesian scorer...");
+				bayesianScorer.enable();
 
 				// Do the learning
 				learner.train(model);
