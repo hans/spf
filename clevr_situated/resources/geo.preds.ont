@@ -15,8 +15,6 @@ union:<<e,t>,<<e,t>,<e,t>>>
 unique:<<e,t>,e>
 relate:<e,<s,<e,t>>>
 
-filter_size:<<e,t>,<psi,<e,t>>>
-filter_material:<<e,t>,<pm,<e,t>>>
 filter_color:<<e,t>,<pc,<e,t>>>
 filter_shape:<<e,t>,<psh,<e,t>>>
 

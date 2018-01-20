@@ -22,7 +22,7 @@ def yield_base_questions(scene):
 
 def yield_1adj_questions(scene):
   for i, obj in enumerate(scene["objects"]):
-    for prop in ["material", "color", "size"]:
+    for prop in PROPERTY_TYPES - set(["shape"]):
       for base_noun in [obj["shape"], "object"]:
         yield "the %s %s" % (obj[prop], base_noun), make_obj_answer(i)
 
