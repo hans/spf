@@ -76,6 +76,11 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
             new HashSet<>(Arrays.asList(Syntax.read("N"), Syntax.read("N/N")));
     private boolean alwaysDefault = true;
 
+    /**
+     * Caches posterior predictive distributions computed for a particular model state.
+     */
+    private transient HashMap<Pair<String, Syntax>, Counter<List<String>>> cache = new HashMap<>();
+
     public BayesianLexicalEntryScorer(ILexicon<LogicalExpression> lexicon, Model model,
                                       IScorer<LexicalEntry<LogicalExpression>> defaultScorer) {
         this.repo = null;
@@ -324,6 +329,22 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         Files.write(Paths.get(SCORER_PATH), Arrays.asList(scoreCode.split("\n")));
     }
 
+    /**
+     * Get the posterior predictive joint distribution over (attribute type, attribute value)
+     * for a given LexicalEntry.
+     */
+    private Counter<List<String>> getPosterior(LexicalEntry<LogicalExpression> entry) {
+        try {
+            buildScript(entry);
+            Counter<List<String>> scores = getScores();
+            System.out.printf("%s %s\n", entry.getTokens(), getMarginalizedScores().get("attr"));
+            return scores;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     @Override
     public double score(LexicalEntry<LogicalExpression> entry) {
         if (alwaysDefault)
@@ -337,15 +358,16 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         if (GetFilterArguments.of(entry.getCategory().getSemantics()) == null)
             return defaultScorer.score(entry);
 
-        try {
-            buildScript(entry);
-            //Map<String, Counter<String>> marginalized = getMarginalizedScores();
-            Counter<List<String>> scores = getScores();
-            System.out.printf("%s %s %s %s\n", entry.getTokens(), entry.getCategory().getSemantics(), entry.getCategory().getSyntax(), scores);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return defaultScorer.score(entry);
+        Pair<String, Syntax> cacheKey = Pair.of(entry.getTokens().toString(), entry.getCategory().getSyntax());
+        Counter<List<String>> distribution = cache.computeIfAbsent(cacheKey, k -> getPosterior(entry));
+        // TODO renormalize, etc.
+
+        Pair<String, String> filterArguments = GetFilterArguments.of(entry.getCategory().getSemantics());
+        List<String> distKey = Arrays.asList(filterArguments.first(), filterArguments.second());
+
+        //System.out.printf("%s %s %s %f\n", entry.getTokens(), entry.getCategory().getSyntax(), filterArguments, distribution.get(distKey));
+
+        return distribution.get(distKey);
     }
 
     public static void main(String[] args) {
