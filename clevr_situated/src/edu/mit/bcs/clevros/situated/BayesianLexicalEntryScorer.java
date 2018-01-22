@@ -189,9 +189,17 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
             entries.get(filterArguments.second()).add(entry);
         });
 
+        // Make sure each attribute->term distribution is present, and that each distribution has the query term in
+        // its support.
+        String queryTerm = queryEntry.getTokens().toString();
+        for (String attribute : ATTRIBUTES) {
+            Counter<String> attrCounter = ret.computeIfAbsent(attribute, k -> new Counter<>(1.0));
+            attrCounter.get(queryTerm);
+        }
+
         // Now aggregate attribute value -> term weights.
         for (Map.Entry<String, Set<LexicalEntry<LogicalExpression>>> entry : entries.entrySet()) {
-            Counter<String> attrCounter = new Counter<>(1.0);
+            Counter<String> attrCounter = ret.get(entry.getKey());
             for (LexicalEntry<LogicalExpression> lexEntry : entry.getValue()) {
                 // Make sure this call isn't circular by forcing the score call to use the default score init function
                 // if necessary.
@@ -201,13 +209,10 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
 
                 attrCounter.addTo(lexEntry.getTokens().toString(), score);
             }
-
-            attrCounter.normalize();
-            ret.put(entry.getKey(), attrCounter);
         }
 
-        // Make sure that at least one distribution has the query term in its support.
-        ret.values().iterator().next().get(queryEntry.getTokens().toString());
+        for (Counter<String> attrCounter : ret.values())
+            attrCounter.normalize();
 
         return ret;
     }
