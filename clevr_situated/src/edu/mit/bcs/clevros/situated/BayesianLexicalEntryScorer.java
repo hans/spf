@@ -140,17 +140,24 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     /**
      * Use the lexicon to build prior distributions over syntaxes for each attribute type.
      */
-    private Map<String, Counter<Syntax>> buildSyntaxPriors() {
+    private Map<String, Counter<Syntax>> buildSyntaxPriors(LexicalEntry<?> queryEntry) {
         Map<String, Counter<Syntax>> ret = new HashMap<>();
 
         // Collect LexicalEntry instances associated with each attribute type.
         Map<String, Set<LexicalEntry<LogicalExpression>>> entries = new HashMap<>();
-
         getFilterLexicalEntries().forEach(entry -> {
             Pair<String, String> filterArguments = GetFilterArguments.of(entry.getCategory().getSemantics());
             entries.computeIfAbsent(filterArguments.first(), k -> new HashSet<>());
             entries.get(filterArguments.first()).add(entry);
         });
+
+        // Make sure each attribute->term distribution is present, and that each distribution has the query term in
+        // its support.
+        Syntax querySyntax = queryEntry.getCategory().getSyntax();
+        for (String attribute : ATTRIBUTES) {
+            Counter<Syntax> attrCounter = ret.computeIfAbsent(attribute, k -> new Counter<>(1.0));
+            attrCounter.get(querySyntax);
+        }
 
         // Now aggregate attribute type -> syntax weights.
         for (Map.Entry<String, Set<LexicalEntry<LogicalExpression>>> entry : entries.entrySet()) {
@@ -182,7 +189,6 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
 
         // Collect LexicalEntry instances associated with each attribute value.
         Map<String, Set<LexicalEntry<LogicalExpression>>> entries = new HashMap<>();
-
         getFilterLexicalEntries().forEach(entry -> {
             Pair<String, String> filterArguments = GetFilterArguments.of(entry.getCategory().getSemantics());
             entries.computeIfAbsent(filterArguments.second(), k -> new HashSet<>());
@@ -192,7 +198,9 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         // Make sure each attribute->term distribution is present, and that each distribution has the query term in
         // its support.
         String queryTerm = queryEntry.getTokens().toString();
-        for (String attribute : ATTRIBUTES) {
+        List<String> allAttributeValues = ATTRIBUTE_VALUES.values().stream()
+                .flatMap(List::stream).collect(Collectors.toList());
+        for (String attribute : allAttributeValues) {
             Counter<String> attrCounter = ret.computeIfAbsent(attribute, k -> new Counter<>(1.0));
             attrCounter.get(queryTerm);
         }
@@ -300,7 +308,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     }
 
     private void buildScript(LexicalEntry<LogicalExpression> entry) throws IOException {
-        Map<String, Counter<Syntax>> syntaxPriors = buildSyntaxPriors();
+        Map<String, Counter<Syntax>> syntaxPriors = buildSyntaxPriors(entry);
         Map<String, Counter<String>> termPriors = buildTermPriors(entry);
 
         List<String> allAttributes = new ArrayList<>(ATTRIBUTE_VALUES.keySet());
