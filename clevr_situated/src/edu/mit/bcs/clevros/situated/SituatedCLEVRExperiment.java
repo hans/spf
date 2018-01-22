@@ -78,7 +78,10 @@ public class SituatedCLEVRExperiment extends DistributedExperiment {
 		// Get parameters
 		// //////////////////////////////////////////
 		final File typesFile = globalParams.getAsFile("types");
-		final List<File> seedLexiconFiles = globalParams.getAsFiles("seedlex");
+		// Seed lexicon used solely to generate LF templates; lexical entries are not stored.
+		final List<File> templateSeedlex = globalParams.getAsFiles("templateSeedlex");
+		// Seed lexicon which is retained in full in the model lexicon.
+		final List<File> seedlexFiles = globalParams.getAsFiles("seedlex");
 
 		// //////////////////////////////////////////
 		// Use tree hash vector
@@ -133,26 +136,10 @@ public class SituatedCLEVRExperiment extends DistributedExperiment {
 		// Initial lexicon
 		// //////////////////////////////////////////////////
 
-		// Create a static set of lexical entries, which are factored using
-		// non-maximal factoring (each lexical entry is factored to multiple
-		// entries). This static set is used to init the model with various
-		// templates and lexemes.
+		Lexicon<LogicalExpression> templateSeeds = readSeedLexicons(templateSeedlex);
+		Lexicon<LogicalExpression> seedLexicon = readSeedLexicons(seedlexFiles);
 
-		final Lexicon<LogicalExpression> readLexicon = new Lexicon<LogicalExpression>();
-		for (final File file : seedLexiconFiles) {
-			readLexicon.addEntriesFromFile(file, categoryServices,
-					Origin.FIXED_DOMAIN);
-		}
-
-		final Lexicon<LogicalExpression> semiFactored = new Lexicon<LogicalExpression>();
-		for (final LexicalEntry<LogicalExpression> entry : readLexicon
-				.toCollection()) {
-			for (final FactoredLexicalEntry factoredEntry : FactoringServices
-					.factor(entry, true, true, 2)) {
-				semiFactored.add(FactoringServices.factor(factoredEntry));
-			}
-		}
-		storeResource("seedLexicon", semiFactored);
+		storeResource("seedLexicon", seedLexicon);
 
 		// //////////////////////////////////////////////////
 		// Read resources
@@ -168,7 +155,7 @@ public class SituatedCLEVRExperiment extends DistributedExperiment {
 		Model<?, LogicalExpression> model = get("model");
 		model.registerListener(genlex);
 		// Use seed lexicon to generate LF templates.
-		genlex.addTemplates(semiFactored.toCollection().stream()
+		genlex.addTemplates(templateSeeds.toCollection().stream()
 				.map(entry -> FactoringServices.factor(entry).getTemplate())
 				.collect(Collectors.toList()));
 
@@ -187,6 +174,30 @@ public class SituatedCLEVRExperiment extends DistributedExperiment {
 			addJob(createJob(params));
 		}
 
+	}
+
+	/**
+	 * Read and semi-factor entries from seed lexicon files.
+	 * @param files
+	 * @return
+	 */
+	private Lexicon<LogicalExpression> readSeedLexicons(List<File> files) {
+		final Lexicon<LogicalExpression> readLexicon = new Lexicon<LogicalExpression>();
+		for (final File file : files) {
+			readLexicon.addEntriesFromFile(file, categoryServices,
+					Origin.FIXED_DOMAIN);
+		}
+
+		final Lexicon<LogicalExpression> semiFactored = new Lexicon<LogicalExpression>();
+		for (final LexicalEntry<LogicalExpression> entry : readLexicon
+				.toCollection()) {
+			for (final FactoredLexicalEntry factoredEntry : FactoringServices
+					.factor(entry, true, true, 2)) {
+				semiFactored.add(FactoringServices.factor(factoredEntry));
+			}
+		}
+
+		return semiFactored;
 	}
 
 	private Job createJob(Parameters params) throws FileNotFoundException {
