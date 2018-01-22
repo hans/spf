@@ -198,11 +198,13 @@ public class GenerationRepository implements Serializable {
 
 	public void init(Set<LexicalTemplate> initTemplates,
 			Set<String> initAttributes) {
-		templates.clear();
+		// DEV: don't clear existing template store. We insert some templates manually beforehand that we'd rather
+		// not have overwritten!
+		/*templates.clear();
 		attributes.clear();
 		signatures.clear();
 		templatesAndAttributes.clear();
-		arrityAndAttributes.clear();
+		arrityAndAttributes.clear();*/
 		attributes.addAll(initAttributes);
 		for (final LexicalTemplate template : initTemplates) {
 			addTemplate(template);
