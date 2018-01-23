@@ -77,7 +77,7 @@ public class GetFilterArguments implements ILogicalExpressionVisitor {
             step++;
             lambda.getBody().accept(this);
         } else if (step == 1) {
-            if (lambdaStructureType == 1 && lambda.getArgument().getType().equals(repo.getEntityType())) {
+            if (lambdaStructureType == 1 && !lambda.getArgument().getType().equals(repo.getEntityType())) {
                 abort();
                 return;
             }
