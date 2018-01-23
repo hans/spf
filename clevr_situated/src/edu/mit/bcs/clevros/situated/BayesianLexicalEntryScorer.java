@@ -350,7 +350,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         try {
             buildScript(entry);
             Counter<List<String>> scores = getScores();
-            System.out.printf("%s %s\n", entry.getTokens(), getMarginalizedScores().get("attr"));
+            System.out.printf("%s\t\t%s\t%s\n", entry.getTokens(), entry.getCategory().getSyntax(), getMarginalizedScores().get("attr"));
             return scores;
         } catch (IOException e) {
             e.printStackTrace();
