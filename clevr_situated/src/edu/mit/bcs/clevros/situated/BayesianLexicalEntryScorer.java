@@ -30,6 +30,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -138,32 +139,45 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     }
 
     /**
-     * Use the lexicon to build prior distributions over syntaxes for each attribute type.
+     * Build a set of conditional distributions p(x|y) for discrete events x, y.
+     * This method is used to build distributions of the form p(syntax | attribute type) and p(term | attribute value).
+     *
+     * @param queryEntry Entry for which this prior is being used to perform inference. Will guarantee that the entry's
+     *                   values exist in the supports of the returned distribution.
+     * @param conditionalSupport Support of the conditional distribution.
+     * @param conditionalFunction Function mapping a lexicon entry to its assignment in the conditional distribution.
+     * @param supportFunction Function mapping a lexicon entry to its assignment in the posterior query distribution.
+     * @param <T> Type of the posterior support.
+     * @return
      */
-    private Map<String, Counter<Syntax>> buildSyntaxPriors(LexicalEntry<?> queryEntry) {
-        Map<String, Counter<Syntax>> ret = new HashMap<>();
+    private <T> Map<String, Counter<T>> buildPriorDistribution(LexicalEntry<LogicalExpression> queryEntry,
+                                                               List<String> conditionalSupport,
+                                                               Function<LexicalEntry<LogicalExpression>, String> conditionalFunction,
+                                                               Function<LexicalEntry<LogicalExpression>, T> supportFunction) {
+        Map<String, Counter<T>> ret = new HashMap<>();
 
         // Collect LexicalEntry instances associated with each attribute type.
         Map<String, Set<LexicalEntry<LogicalExpression>>> entries = new HashMap<>();
         getFilterLexicalEntries().forEach(entry -> {
-            Pair<String, String> filterArguments = GetFilterArguments.of(entry.getCategory().getSemantics());
-            entries.computeIfAbsent(filterArguments.first(), k -> new HashSet<>());
-            entries.get(filterArguments.first()).add(entry);
+            String condKey = conditionalFunction.apply(entry);
+            entries.computeIfAbsent(condKey, k -> new HashSet<>()).add(entry);
         });
 
-        // Make sure each attribute->term distribution is present, and that each distribution has the query term in
-        // its support.
-        Syntax querySyntax = queryEntry.getCategory().getSyntax();
-        for (String attribute : ATTRIBUTES) {
-            Counter<Syntax> attrCounter = ret.computeIfAbsent(attribute, k -> new Counter<>(1.0));
-            attrCounter.get(querySyntax);
+        Function<String, Counter<T>> defaultCounter = k -> new Counter<>(1.0);
+
+        // Make sure a distribution over Ts is present for each element of the conditional support, and that each
+        // distribution has the query term in its posterior support.
+        T queryKey = supportFunction.apply(queryEntry);
+        for (String element : conditionalSupport) {
+            Counter<T> attrCounter = ret.computeIfAbsent(element, defaultCounter);
+            attrCounter.get(queryKey);
         }
 
-        // Now aggregate attribute type -> syntax weights.
+        // Now aggregate weights for each conditional distribution.
         for (Map.Entry<String, Set<LexicalEntry<LogicalExpression>>> entry : entries.entrySet()) {
-            Counter<Syntax> attrCounter = new Counter<>(1.0);
+            Counter<T> attrCounter = ret.computeIfAbsent(entry.getKey(), defaultCounter);
             for (LexicalEntry<LogicalExpression> lexEntry : entry.getValue()) {
-                Syntax entrySyntax = lexEntry.getCategory().getSyntax();
+                T entryKey = supportFunction.apply(lexEntry);
 
                 // Make sure this call isn't circular by forcing the score call to use the default score init function
                 // if necessary.
@@ -171,58 +185,33 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
                 double score = getModel().score(lexEntry);
                 alwaysDefault = false;
 
-                attrCounter.addTo(entrySyntax, score);
+                attrCounter.addTo(entryKey, score);
             }
 
             attrCounter.normalize();
-            ret.put(entry.getKey(), attrCounter);
         }
 
         return ret;
     }
 
     /**
+     * Use the lexicon to build prior distributions over syntaxes for each attribute type.
+     */
+    private Map<String, Counter<Syntax>> buildSyntaxPriors(LexicalEntry<LogicalExpression> queryEntry) {
+        return buildPriorDistribution(queryEntry,
+                ATTRIBUTES,
+                (entry) -> GetFilterArguments.of(entry.getCategory().getSemantics()).first(),
+                (entry) -> entry.getCategory().getSyntax());
+    }
+
+    /**
      * Use the lexicon to build prior distributions over terms for each attribute value.
      */
-    private Map<String, Counter<String>> buildTermPriors(LexicalEntry<?> queryEntry) {
-        Map<String, Counter<String>> ret = new HashMap<>();
-
-        // Collect LexicalEntry instances associated with each attribute value.
-        Map<String, Set<LexicalEntry<LogicalExpression>>> entries = new HashMap<>();
-        getFilterLexicalEntries().forEach(entry -> {
-            Pair<String, String> filterArguments = GetFilterArguments.of(entry.getCategory().getSemantics());
-            entries.computeIfAbsent(filterArguments.second(), k -> new HashSet<>());
-            entries.get(filterArguments.second()).add(entry);
-        });
-
-        // Make sure each attribute->term distribution is present, and that each distribution has the query term in
-        // its support.
-        String queryTerm = queryEntry.getTokens().toString();
-        List<String> allAttributeValues = ATTRIBUTE_VALUES.values().stream()
-                .flatMap(List::stream).collect(Collectors.toList());
-        for (String attribute : allAttributeValues) {
-            Counter<String> attrCounter = ret.computeIfAbsent(attribute, k -> new Counter<>(1.0));
-            attrCounter.get(queryTerm);
-        }
-
-        // Now aggregate attribute value -> term weights.
-        for (Map.Entry<String, Set<LexicalEntry<LogicalExpression>>> entry : entries.entrySet()) {
-            Counter<String> attrCounter = ret.get(entry.getKey());
-            for (LexicalEntry<LogicalExpression> lexEntry : entry.getValue()) {
-                // Make sure this call isn't circular by forcing the score call to use the default score init function
-                // if necessary.
-                alwaysDefault = true;
-                double score = getModel().score(lexEntry);
-                alwaysDefault = false;
-
-                attrCounter.addTo(lexEntry.getTokens().toString(), score);
-            }
-        }
-
-        for (Counter<String> attrCounter : ret.values())
-            attrCounter.normalize();
-
-        return ret;
+    private Map<String, Counter<String>> buildTermPriors(LexicalEntry<LogicalExpression> queryEntry) {
+        return buildPriorDistribution(queryEntry,
+                ATTRIBUTE_VALUES.values().stream().flatMap(List::stream).collect(Collectors.toList()),
+                entry -> GetFilterArguments.of(entry.getCategory().getSemantics()).second(),
+                entry -> entry.getTokens().toString());
     }
 
     private JSONArray runScorer() {
