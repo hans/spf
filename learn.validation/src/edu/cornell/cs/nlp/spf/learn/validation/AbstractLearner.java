@@ -352,7 +352,7 @@ public abstract class AbstractLearner<SAMPLE extends IDataItem<?>, DI extends IL
             parserOutputLogger.log(parserOutput, dataItemModel, String
                     .format("train-%d-%d-genlex", epochNumber, dataItemNumber));
 
-            LOG.info("Created %d lexicon generation parses for training sample",
+            System.err.printf("Created %d lexicon generation parses for training sample\n",
                     parserOutput.getAllDerivations().size());
 
             // Get valid lexical generation parses
@@ -390,7 +390,7 @@ public abstract class AbstractLearner<SAMPLE extends IDataItem<?>, DI extends IL
                         if (model.addLexEntry(
                                 LexiconGenerationServices.unmark(entry))) {
                             ++newLexicalEntries;
-                            LOG.info("Added LexicalEntry to model: %s [%s]",
+                            System.err.printf("Added LexicalEntry to model: %s [%s]\n",
                                     entry, model.getTheta().printValues(
                                             model.computeFeatures(entry)));
                         }
