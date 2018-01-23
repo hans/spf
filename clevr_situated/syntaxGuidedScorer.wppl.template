@@ -33,5 +33,5 @@ var posterior = Infer({method: "SMC", particles: 100},
 }))
 
 JSON.stringify(map(function(val) {
-  [val, posterior.score(val)]
+  [val, Math.exp(posterior.score(val))]
 }, posterior.support()))

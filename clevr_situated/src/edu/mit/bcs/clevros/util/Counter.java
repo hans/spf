@@ -17,6 +17,13 @@ public class Counter<K> {
         this.map = new HashMap<>();
     }
 
+    public Counter(double defaultValue, List<K> initialKeys) {
+        this(defaultValue);
+
+        for (K key : initialKeys)
+            get(key);
+    }
+
     public double get(K key) {
         return map.computeIfAbsent(key, k -> defaultValue);
     }
