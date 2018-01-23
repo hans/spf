@@ -185,10 +185,12 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
                 double score = getModel().score(lexEntry);
                 alwaysDefault = false;
 
+                // DEV: this makes the Dirichlet priors look nice
                 attrCounter.addTo(entryKey, score);
             }
 
-            attrCounter.normalize();
+            // DEV: this makes the Dirichlet priors look nice
+//            attrCounter.normalize();
         }
 
         return ret;
@@ -339,7 +341,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         try {
             buildScript(entry);
             Counter<List<String>> scores = getScores();
-            System.out.printf("%s\t\t%s\t%s\n", entry.getTokens(), entry.getCategory().getSyntax(), getMarginalizedScores().get("attr"));
+            System.out.printf("%30s\t%s\t%s\n", entry.getTokens(), entry.getCategory().getSyntax(), getMarginalizedScores().get("attr"));
             return scores;
         } catch (IOException e) {
             e.printStackTrace();
