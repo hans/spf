@@ -154,10 +154,10 @@ public class SituatedCLEVRExperiment extends DistributedExperiment {
 		SituatedTemplateCoarseGenlex genlex = get("genlex");
 		Model<?, LogicalExpression> model = get("model");
 		model.registerListener(genlex);
-		// Use seed lexicon to generate LF templates.
-		genlex.addTemplates(templateSeeds.toCollection().stream()
-				.map(entry -> FactoringServices.factor(entry).getTemplate())
-				.collect(Collectors.toList()));
+//		// Use seed lexicon to generate LF templates.
+//		genlex.addTemplates(templateSeeds.toCollection().stream()
+//				.map(entry -> FactoringServices.factor(entry).getTemplate())
+//				.collect(Collectors.toList()));
 
 		// //////////////////////////////////////////////////
 		// Fetch custom Bayesian scorer.
