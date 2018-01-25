@@ -124,9 +124,8 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     }
 
     private void checkScorer() {
-        scorerFile = new File(SCORER_PATH);
-        if (!scorerFile.exists())
-            throw new RuntimeException("cannot find scorer file at " + SCORER_PATH);
+        if (!new File(SCORER_TEMPLATE_PATH).exists())
+            throw new RuntimeException("cannot find scorer template file at " + SCORER_TEMPLATE_PATH);
     }
 
     public void clearCache() {
