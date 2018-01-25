@@ -24,6 +24,10 @@ public class Counter<K> {
             get(key);
     }
 
+    public K argmax() {
+        return map.keySet().stream().max((k1, k2) -> Double.compare(map.get(k2), map.get(k1))).orElse(null);
+    }
+
     public double get(K key) {
         return map.computeIfAbsent(key, k -> defaultValue);
     }
