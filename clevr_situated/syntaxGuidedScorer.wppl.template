@@ -27,10 +27,39 @@ var query = function(querier) {return function() {
   querier(attr, attrVal, term, syntax)
 }}
 
-var posterior = Infer({method: "SMC", particles: 100},
-                     query(function(attr, attrVal, term, syntax) {
-  {{queryCode}}
-}))
+var listener1 = function(qTerm, qSyntax) {
+  Infer({method: "SMC", particles: 20},
+        query(function(attr, attrVal, term, syntax) {
+    var qAttr = sample(attr);
+    var qAttrVal = sample(attrVal(qAttr));
+    observe(term(qAttrVal), qTerm);
+    observe(syntax(qAttr), qSyntax);
+    return {attr: qAttr, attrVal: qAttrVal}
+  }))
+}
+
+var alpha = 1
+var speaker = function(qAttr, qAttrVal) {
+  Infer({method: "SMC", particles: 20},
+        query(function(attr, attrVal, term, syntax) {
+    var qSyntax = sample(syntax(qAttr))
+    var qTerm = sample(term(qAttrVal))
+    factor(alpha * listener1(qTerm, qSyntax).score({attr: qAttr, attrVal: qAttrVal}))
+    return {syntax: qSyntax, term: qTerm}
+  }))
+}
+
+var listener2 = function(qTerm, qSyntax) {
+  Infer({method: "SMC", particles: 50},
+        query(function(attr, attrVal, term, syntax) {
+    var qAttr = sample(attr);
+    var qAttrVal = sample(attrVal(qAttr));
+    observe(speaker(qAttr, qAttrVal), {syntax: qSyntax, term: qTerm});
+    return {attr: qAttr, attrVal: qAttrVal}
+  }))
+}
+
+var posterior = listener2("{{queryTerm}}", "{{querySyntax}}")
 
 JSON.stringify(map(function(val) {
   [val, Math.exp(posterior.score(val))]

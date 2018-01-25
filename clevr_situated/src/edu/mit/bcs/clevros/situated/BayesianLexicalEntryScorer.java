@@ -52,12 +52,6 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     private static final String SCORER_PATH = "syntaxGuidedScorer.wppl";
     private File scorerFile;
 
-    private static final String QUERY_CODE =
-                    "var qAttr = sample(attr);\n" +
-                    "var qAttrVal = sample(attrVal(qAttr));\n" +
-                    "observe(term(qAttrVal), \"%s\");\n" +
-                    "observe(syntax(qAttr), \"%s\");\n" +
-                    "return {attr: qAttr, attrVal: qAttrVal}";
     private static final List<String> QUERY_VARS = Arrays.asList("attr", "attrVal");
     private static final Set<String> QUERY_VARS_SET = new HashSet<>(QUERY_VARS);
 
@@ -391,7 +385,8 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         tData.put("syntaxes", gson.toJson(allSyntaxStrings));
         tData.put("termPriors", buildPriorString(termPriors, allAttributeValues, allTerms));
         tData.put("syntaxPriors", buildPriorString(syntaxPriors, allAttributes, allSyntaxes));
-        tData.put("queryCode", String.format(QUERY_CODE, entry.getTokens(), entry.getCategory().getSyntax()));
+        tData.put("queryTerm", entry.getTokens().toString());
+        tData.put("querySyntax", entry.getCategory().getSyntax().toString());
 
         BufferedReader templateReader = new BufferedReader(new FileReader(SCORER_TEMPLATE_PATH));
         Template tmpl = Mustache.compiler().escapeHTML(false).compile(templateReader);
