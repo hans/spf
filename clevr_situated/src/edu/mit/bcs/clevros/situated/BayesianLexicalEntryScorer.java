@@ -7,9 +7,12 @@ import com.samskivert.mustache.Template;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Syntax;
 import edu.cornell.cs.nlp.spf.ccg.lexicon.ILexicon;
 import edu.cornell.cs.nlp.spf.ccg.lexicon.LexicalEntry;
+import edu.cornell.cs.nlp.spf.data.IDataItem;
 import edu.cornell.cs.nlp.spf.explat.IResourceRepository;
 import edu.cornell.cs.nlp.spf.explat.ParameterizedExperiment;
 import edu.cornell.cs.nlp.spf.explat.resources.usage.ResourceUsage;
+import edu.cornell.cs.nlp.spf.learn.ILearner;
+import edu.cornell.cs.nlp.spf.learn.ILearnerListener;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
 import edu.cornell.cs.nlp.spf.parser.ccg.features.basic.scorer.AbstractScaledScorerCreator;
 import edu.cornell.cs.nlp.spf.parser.ccg.features.basic.scorer.UniformScorer;
@@ -42,7 +45,7 @@ import java.util.stream.Collectors;
  * a model/lexicon which is not prepared, defaults to another Scorer
  * instance.
  */
-public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEntry<LogicalExpression>> {
+public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEntry<LogicalExpression>>, ILearnerListener {
 
     private static final String SCRIPT_PATH = "./run_wppl";
     private static final String SCORER_TEMPLATE_PATH = "syntaxGuidedScorer.wppl.template";
@@ -130,6 +133,15 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         scorerFile = new File(SCORER_PATH);
         if (!scorerFile.exists())
             throw new RuntimeException("cannot find scorer file at " + SCORER_PATH);
+    }
+
+    public void clearCache() {
+        cache.clear();
+    }
+
+    @Override
+    public void beganDataItem(IDataItem<?> dataItem) {
+        clearCache();
     }
 
     private Set<LexicalEntry<LogicalExpression>> getFilterLexicalEntries() {
@@ -372,7 +384,6 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
 
         Pair<String, Syntax> cacheKey = Pair.of(entry.getTokens().toString(), entry.getCategory().getSyntax());
         Counter<List<String>> distribution = cache.computeIfAbsent(cacheKey, k -> getPosterior(entry));
-        // TODO renormalize, etc.
 
         Pair<String, String> filterArguments = GetFilterArguments.of(entry.getCategory().getSemantics());
         List<String> distKey = Arrays.asList(filterArguments.first(), filterArguments.second());

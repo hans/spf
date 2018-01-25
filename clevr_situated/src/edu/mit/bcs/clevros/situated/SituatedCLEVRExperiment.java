@@ -39,6 +39,7 @@ import edu.cornell.cs.nlp.spf.explat.Job;
 import edu.cornell.cs.nlp.spf.explat.resources.ResourceCreatorRepository;
 import edu.cornell.cs.nlp.spf.genlex.ccg.ILexiconGenerator;
 import edu.cornell.cs.nlp.spf.learn.ILearner;
+import edu.cornell.cs.nlp.spf.learn.validation.AbstractLearner;
 import edu.cornell.cs.nlp.spf.mr.lambda.*;
 import edu.cornell.cs.nlp.spf.mr.lambda.ccg.LogicalExpressionCategoryServices;
 import edu.cornell.cs.nlp.spf.mr.language.type.TypeRepository;
@@ -165,6 +166,10 @@ public class SituatedCLEVRExperiment extends DistributedExperiment {
 		bayesianScorer = get("bayesianScorer");
 		// Disable during e.g. model init.
 		bayesianScorer.disable();
+
+		// HACKY: Let bayesianScorer listen to learning updates
+		AbstractLearner<?, ?, ?, ?> learner = get("stocgrad");
+		learner.registerListener(bayesianScorer);
 
 		// //////////////////////////////////////////////////
 		// Create jobs

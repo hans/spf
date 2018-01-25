@@ -16,9 +16,7 @@
  *******************************************************************************/
 package edu.cornell.cs.nlp.spf.learn.validation;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
 
 import edu.cornell.cs.nlp.spf.ccg.categories.ICategoryServices;
@@ -30,6 +28,7 @@ import edu.cornell.cs.nlp.spf.data.collection.IDataCollection;
 import edu.cornell.cs.nlp.spf.genlex.ccg.ILexiconGenerator;
 import edu.cornell.cs.nlp.spf.genlex.ccg.LexiconGenerationServices;
 import edu.cornell.cs.nlp.spf.learn.ILearner;
+import edu.cornell.cs.nlp.spf.learn.ILearnerListener;
 import edu.cornell.cs.nlp.spf.learn.LearningStats;
 import edu.cornell.cs.nlp.spf.learn.validation.perceptron.ValidationPerceptron;
 import edu.cornell.cs.nlp.spf.learn.validation.stocgrad.ValidationStocGrad;
@@ -40,6 +39,7 @@ import edu.cornell.cs.nlp.spf.parser.ParsingOp;
 import edu.cornell.cs.nlp.spf.parser.ccg.IWeightedParseStep;
 import edu.cornell.cs.nlp.spf.parser.ccg.model.IDataItemModel;
 import edu.cornell.cs.nlp.spf.parser.ccg.model.IModelImmutable;
+import edu.cornell.cs.nlp.spf.parser.ccg.model.IModelListener;
 import edu.cornell.cs.nlp.spf.parser.ccg.model.Model;
 import edu.cornell.cs.nlp.spf.parser.filter.IParsingFilterFactory;
 import edu.cornell.cs.nlp.utils.collections.CollectionUtils;
@@ -135,6 +135,8 @@ public abstract class AbstractLearner<SAMPLE extends IDataItem<?>, DI extends IL
      */
     protected final LearningStats											stats;
 
+    private transient Set<ILearnerListener>                                 listeners = new HashSet<>();
+
     protected AbstractLearner(int epochs, int maxIterations,
             IDataCollection<DI> trainingData, Map<DI, MR> trainingDataDebug,
             int lexiconGenerationBeamSize, IOutputLogger<MR> parserOutputLogger,
@@ -161,6 +163,18 @@ public abstract class AbstractLearner<SAMPLE extends IDataItem<?>, DI extends IL
                 .addStat(GOLD_LF_IS_MAX,
                         "The best-scoring LF equals the provided GOLD debug LF")
                 .setNumberStat("Number of new lexical entries added").build();
+    }
+
+    public void registerListener(ILearnerListener listener) {
+        synchronized (listeners) {
+            listeners.add(listener);
+        }
+    }
+
+    public void unregisterListener(ILearnerListener listener) {
+        synchronized (listeners) {
+            listeners.remove(listener);
+        }
     }
 
     @Override
@@ -204,6 +218,9 @@ public abstract class AbstractLearner<SAMPLE extends IDataItem<?>, DI extends IL
                 }
 
                 stats.count("Processed", epochNumber);
+
+                for (ILearnerListener listener : listeners)
+                    listener.beganDataItem(dataItem);
 
                 try {
                     // Data item model
@@ -293,6 +310,9 @@ public abstract class AbstractLearner<SAMPLE extends IDataItem<?>, DI extends IL
                             "sec");
                     LOG.info("Total sample handling time: %.4fsec",
                             (System.currentTimeMillis() - startTime) / 1000.0);
+
+                    for (ILearnerListener listener : listeners)
+                        listener.finishedDataItem(dataItem);
                 }
 
                 iterations++;
