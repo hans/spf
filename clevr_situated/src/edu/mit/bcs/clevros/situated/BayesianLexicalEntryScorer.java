@@ -138,20 +138,30 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
                 .collect(Collectors.toSet());
     }
 
+    private Set<Syntax> getFilterSyntaxes() {
+        return getFilterLexicalEntries().stream()
+                .map(entry -> entry.getCategory().getSyntax())
+                .collect(Collectors.toSet());
+    }
+
+    private Set<String> getFilterTerms() {
+        return getFilterLexicalEntries().stream()
+                .map(entry -> entry.getTokens().toString())
+                .collect(Collectors.toSet());
+    }
+
     /**
      * Build a set of conditional distributions p(x|y) for discrete events x, y.
      * This method is used to build distributions of the form p(syntax | attribute type) and p(term | attribute value).
      *
-     * @param queryEntry Entry for which this prior is being used to perform inference. Will guarantee that the entry's
-     *                   values exist in the supports of the returned distribution.
      * @param conditionalSupport Support of the conditional distribution.
      * @param conditionalFunction Function mapping a lexicon entry to its assignment in the conditional distribution.
      * @param supportFunction Function mapping a lexicon entry to its assignment in the posterior query distribution.
      * @param <T> Type of the posterior support.
      * @return
      */
-    private <T> Map<String, Counter<T>> buildPriorDistribution(LexicalEntry<LogicalExpression> queryEntry,
-                                                               List<String> conditionalSupport,
+    private <T> Map<String, Counter<T>> buildPriorDistribution(List<String> conditionalSupport,
+                                                               List<T> support,
                                                                Function<LexicalEntry<LogicalExpression>, String> conditionalFunction,
                                                                Function<LexicalEntry<LogicalExpression>, T> supportFunction) {
         Map<String, Counter<T>> ret = new HashMap<>();
@@ -163,19 +173,13 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
             entries.computeIfAbsent(condKey, k -> new HashSet<>()).add(entry);
         });
 
-        Function<String, Counter<T>> defaultCounter = k -> new Counter<>(1.0);
-
-        // Make sure a distribution over Ts is present for each element of the conditional support, and that each
-        // distribution has the query term in its posterior support.
-        T queryKey = supportFunction.apply(queryEntry);
-        for (String element : conditionalSupport) {
-            Counter<T> attrCounter = ret.computeIfAbsent(element, defaultCounter);
-            attrCounter.get(queryKey);
-        }
+        Function<String, Counter<T>> defaultCounter = k -> new Counter<>(1.0, support);
+        for (String value : conditionalSupport)
+            ret.put(value, defaultCounter.apply(null));
 
         // Now aggregate weights for each conditional distribution.
         for (Map.Entry<String, Set<LexicalEntry<LogicalExpression>>> entry : entries.entrySet()) {
-            Counter<T> attrCounter = ret.computeIfAbsent(entry.getKey(), defaultCounter);
+            Counter<T> attrCounter = ret.get(entry.getKey());
             for (LexicalEntry<LogicalExpression> lexEntry : entry.getValue()) {
                 T entryKey = supportFunction.apply(lexEntry);
 
@@ -185,13 +189,13 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
                 double score = getModel().score(lexEntry);
                 alwaysDefault = false;
 
-                // DEV: this makes the Dirichlet priors look nice
                 attrCounter.addTo(entryKey, score);
             }
-
-            // DEV: this makes the Dirichlet priors look nice
-//            attrCounter.normalize();
         }
+
+        // DEV: this makes the Dirichlet priors look nice
+        for (String value : conditionalSupport)
+            ret.get(value).normalize(4);
 
         return ret;
     }
@@ -199,9 +203,10 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     /**
      * Use the lexicon to build prior distributions over syntaxes for each attribute type.
      */
-    private Map<String, Counter<Syntax>> buildSyntaxPriors(LexicalEntry<LogicalExpression> queryEntry) {
-        return buildPriorDistribution(queryEntry,
+    private Map<String, Counter<Syntax>> buildSyntaxPriors(List<Syntax> support) {
+        return buildPriorDistribution(
                 ATTRIBUTES,
+                support,
                 (entry) -> GetFilterArguments.of(entry.getCategory().getSemantics()).first(),
                 (entry) -> entry.getCategory().getSyntax());
     }
@@ -209,9 +214,10 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     /**
      * Use the lexicon to build prior distributions over terms for each attribute value.
      */
-    private Map<String, Counter<String>> buildTermPriors(LexicalEntry<LogicalExpression> queryEntry) {
-        return buildPriorDistribution(queryEntry,
+    private Map<String, Counter<String>> buildTermPriors(List<String> support) {
+        return buildPriorDistribution(
                 ATTRIBUTE_VALUES.values().stream().flatMap(List::stream).collect(Collectors.toList()),
+                support,
                 entry -> GetFilterArguments.of(entry.getCategory().getSemantics()).second(),
                 entry -> entry.getTokens().toString());
     }
@@ -288,7 +294,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         ret.append("{\n");
 
         support1.forEach(key -> {
-            Counter<T> thisPrior = priorDistribution.computeIfAbsent(key, k -> new Counter<>(1.0));
+            Counter<T> thisPrior = priorDistribution.get(key);
             String priorValueStr = support2.stream().map(val -> String.valueOf(thisPrior.get(val)))
                     .collect(Collectors.joining(","));
             ret.append(String.format("\t\"%s\": Dirichlet({alpha: Vector([%s])}),\n", key, priorValueStr));
@@ -299,21 +305,23 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     }
 
     private void buildScript(LexicalEntry<LogicalExpression> entry) throws IOException {
-        Map<String, Counter<Syntax>> syntaxPriors = buildSyntaxPriors(entry);
-        Map<String, Counter<String>> termPriors = buildTermPriors(entry);
+        List<Syntax> allSyntaxes = new ArrayList<>(getFilterSyntaxes());
+
+        // Make sure that queried entry appears in the support.
+        Set<String> allTermsSet = getFilterTerms();
+        allTermsSet.add(entry.getTokens().toString());
+        List<String> allTerms = new ArrayList<>(allTermsSet);
+
+        List<String> allSyntaxStrings = allSyntaxes.stream()
+                .map(Syntax::toString).collect(Collectors.toList());
+
+        // Calculate prior distributions from lexicon weights.
+        Map<String, Counter<Syntax>> syntaxPriors = buildSyntaxPriors(allSyntaxes);
+        Map<String, Counter<String>> termPriors = buildTermPriors(allTerms);
 
         List<String> allAttributes = new ArrayList<>(ATTRIBUTE_VALUES.keySet());
         List<String> allAttributeValues = ATTRIBUTE_VALUES.values().stream()
                 .flatMap(Collection::stream).collect(Collectors.toList());
-
-        List<String> allTerms = termPriors.values().stream()
-                .flatMap(counter -> counter.keySet().stream())
-                .distinct().collect(Collectors.toList());
-        List<Syntax> allSyntaxes = syntaxPriors.values().stream()
-                .flatMap(counter -> counter.keySet().stream())
-                .distinct().collect(Collectors.toList());
-        List<String> allSyntaxStrings = allSyntaxes.stream()
-                .map(Syntax::toString).collect(Collectors.toList());
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
