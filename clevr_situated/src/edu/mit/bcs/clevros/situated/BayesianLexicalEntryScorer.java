@@ -144,21 +144,68 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         clearCache();
     }
 
-    private Set<LexicalEntry<LogicalExpression>> getFilterLexicalEntries() {
+    /**
+     * Thin wrapper on {@link LexicalEntry} which implements a different hashCode.
+     */
+    private static class WrappedLexicalEntry {
+
+        private final LexicalEntry<LogicalExpression> entry;
+
+        public WrappedLexicalEntry(LexicalEntry<LogicalExpression> entry) {
+            this.entry = entry;
+        }
+
+        public LexicalEntry<LogicalExpression> getEntry() {
+            return entry;
+        }
+
+        public Syntax getSyntax() {
+            return entry.getCategory().getSyntax();
+        }
+
+        public LogicalExpression getSemantics() {
+            return entry.getCategory().getSemantics();
+        }
+
+        public String getTerm() {
+            return entry.getTokens().toString();
+        }
+
+        @Override
+        public String toString() {
+            return entry.toString();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            WrappedLexicalEntry that = (WrappedLexicalEntry) o;
+            return Objects.equals(entry.toString(), that.entry.toString());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(entry.toString());
+        }
+    }
+
+    private Set<WrappedLexicalEntry> getFilterLexicalEntries() {
         return getLexicon().toCollection().stream()
                 .filter(entry -> GetFilterArguments.of(entry.getCategory().getSemantics()) != null)
+                .map(WrappedLexicalEntry::new)
                 .collect(Collectors.toSet());
     }
 
     private Set<Syntax> getFilterSyntaxes() {
         return getFilterLexicalEntries().stream()
-                .map(entry -> entry.getCategory().getSyntax())
+                .map(WrappedLexicalEntry::getSyntax)
                 .collect(Collectors.toSet());
     }
 
     private Set<String> getFilterTerms() {
         return getFilterLexicalEntries().stream()
-                .map(entry -> entry.getTokens().toString())
+                .map(WrappedLexicalEntry::getTerm)
                 .collect(Collectors.toSet());
     }
 
@@ -174,12 +221,12 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
      */
     private <T> Map<String, Counter<T>> buildPriorDistribution(List<String> conditionalSupport,
                                                                List<T> support,
-                                                               Function<LexicalEntry<LogicalExpression>, String> conditionalFunction,
-                                                               Function<LexicalEntry<LogicalExpression>, T> supportFunction) {
+                                                               Function<WrappedLexicalEntry, String> conditionalFunction,
+                                                               Function<WrappedLexicalEntry, T> supportFunction) {
         Map<String, Counter<T>> ret = new HashMap<>();
 
         // Collect LexicalEntry instances associated with each attribute type.
-        Map<String, Set<LexicalEntry<LogicalExpression>>> entries = new HashMap<>();
+        Map<String, Set<WrappedLexicalEntry>> entries = new HashMap<>();
         getFilterLexicalEntries().forEach(entry -> {
             String condKey = conditionalFunction.apply(entry);
             entries.computeIfAbsent(condKey, k -> new HashSet<>()).add(entry);
@@ -190,16 +237,15 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
             ret.put(value, defaultCounter.apply(null));
 
         // Now aggregate weights for each conditional distribution.
-        for (Map.Entry<String, Set<LexicalEntry<LogicalExpression>>> entry : entries.entrySet()) {
+        for (Map.Entry<String, Set<WrappedLexicalEntry>> entry : entries.entrySet()) {
             Counter<T> attrCounter = ret.get(entry.getKey());
-            for (LexicalEntry<LogicalExpression> lexEntry : entry.getValue()) {
-                // TODO looks like we're double-counting here -- LexicalEntry.hashCode isn't working as desired
+            for (WrappedLexicalEntry lexEntry : entry.getValue()) {
                 T entryKey = supportFunction.apply(lexEntry);
 
                 // Make sure this call isn't circular by forcing the score call to use the default score init function
                 // if necessary.
                 alwaysDefault = true;
-                double score = getModel().score(lexEntry);
+                double score = getModel().score(lexEntry.getEntry());
                 alwaysDefault = false;
 
                 attrCounter.addTo(entryKey, score);
@@ -220,8 +266,8 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         return buildPriorDistribution(
                 ATTRIBUTES,
                 support,
-                (entry) -> GetFilterArguments.of(entry.getCategory().getSemantics()).first(),
-                (entry) -> entry.getCategory().getSyntax());
+                (entry) -> GetFilterArguments.of(entry.getSemantics()).first(),
+                (entry) -> entry.getSyntax());
     }
 
     /**
@@ -231,8 +277,8 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         return buildPriorDistribution(
                 ATTRIBUTE_VALUES.values().stream().flatMap(List::stream).collect(Collectors.toList()),
                 support,
-                entry -> GetFilterArguments.of(entry.getCategory().getSemantics()).second(),
-                entry -> entry.getTokens().toString());
+                entry -> GetFilterArguments.of(entry.getSemantics()).second(),
+                entry -> entry.getTerm());
     }
 
     private JSONArray runScorer() {
