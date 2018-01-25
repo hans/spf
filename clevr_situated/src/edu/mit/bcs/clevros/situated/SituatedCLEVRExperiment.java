@@ -49,6 +49,7 @@ import edu.cornell.cs.nlp.utils.log.ILogger;
 import edu.cornell.cs.nlp.utils.log.LogLevel;
 import edu.cornell.cs.nlp.utils.log.Logger;
 import edu.cornell.cs.nlp.utils.log.LoggerFactory;
+import edu.mit.bcs.clevros.OnlineTester;
 import edu.mit.bcs.clevros.data.CLEVRAnswer;
 import edu.mit.bcs.clevros.data.CLEVRScene;
 import edu.mit.bcs.clevros.genlex.ccg.template.coarse.SituatedTemplateCoarseGenlex;
@@ -170,6 +171,10 @@ public class SituatedCLEVRExperiment extends DistributedExperiment {
 		// HACKY: Let bayesianScorer listen to learning updates
 		AbstractLearner<?, ?, ?, ?> learner = get("stocgrad");
 		learner.registerListener(bayesianScorer);
+
+		// Set up online testing.
+		OnlineTester tester = new OnlineTester(get("validator"), get("tester"), get("model"));
+		learner.registerListener(tester);
 
 		// //////////////////////////////////////////////////
 		// Create jobs
