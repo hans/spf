@@ -449,7 +449,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
                 ParameterizedExperiment.Parameters parameters, IResourceRepository resourceRepo) {
             IScorer<LexicalEntry<LogicalExpression>> defaultScorer = parameters.contains("defaultScorer")
                     ? resourceRepo.get(parameters.get("defaultScorer"))
-                    : new UniformScorer<>(1.0);
+                    : new UniformScorer<>(0.0);
 
             return new BayesianLexicalEntryScorer(resourceRepo, parameters.get("lexicon"),
                     parameters.get("model"), defaultScorer);
