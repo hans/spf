@@ -11,7 +11,6 @@ import edu.cornell.cs.nlp.spf.data.IDataItem;
 import edu.cornell.cs.nlp.spf.explat.IResourceRepository;
 import edu.cornell.cs.nlp.spf.explat.ParameterizedExperiment;
 import edu.cornell.cs.nlp.spf.explat.resources.usage.ResourceUsage;
-import edu.cornell.cs.nlp.spf.learn.ILearner;
 import edu.cornell.cs.nlp.spf.learn.ILearnerListener;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
 import edu.cornell.cs.nlp.spf.parser.ccg.features.basic.scorer.AbstractScaledScorerCreator;
@@ -35,6 +34,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * A scorer which uses a Bayesian model to compute prior weights
@@ -49,8 +49,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
 
     private static final String SCRIPT_PATH = "./run_wppl";
     private static final String SCORER_TEMPLATE_PATH = "syntaxGuidedScorer.wppl.template";
-    private static final String SCORER_PATH = "syntaxGuidedScorer.wppl";
-    private File scorerFile;
+    private static final String SCORER_PATH = "syntaxGuidedScorer.%d.wppl";
 
     private static final List<String> QUERY_VARS = Arrays.asList("attr", "attrVal");
     private static final Set<String> QUERY_VARS_SET = new HashSet<>(QUERY_VARS);
@@ -73,6 +72,8 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     private static final Set<Syntax> SUPPORTED_SYNTAXES =
             new HashSet<>(Arrays.asList(Syntax.read("N"), Syntax.read("N/N")));
     private boolean alwaysDefault = true;
+
+    private final PrimitiveIterator.OfInt randomInts = new Random().ints().iterator();
 
     /**
      * Caches posterior predictive distributions computed for a particular model state.
@@ -274,9 +275,9 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
                 entry -> entry.getTerm());
     }
 
-    private JSONArray runScorer() {
+    private JSONArray runScorer(String scorerPath) {
         try {
-            ProcessBuilder pb = new ProcessBuilder(SCRIPT_PATH, SCORER_PATH);
+            ProcessBuilder pb = new ProcessBuilder(SCRIPT_PATH, scorerPath);
             pb.redirectError(new File("err.out"));
             Process proc = pb.start();
 
@@ -289,8 +290,8 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         }
     }
 
-    private Counter<List<String>> getScores() {
-        JSONArray scores = runScorer();
+    private Counter<List<String>> getScores(String scorerPath) {
+        JSONArray scores = runScorer(scorerPath);
         Counter<List<String>> ret = new Counter<>();
 
         for (Object scoreEl : scores) {
@@ -313,8 +314,8 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     /**
      * Execute the prepared Bayesian model and return marginal distributions for each of {@link #QUERY_VARS}.
      */
-    private Map<String, Counter<String>> getMarginalizedScores() {
-        Counter<List<String>> fullTable = getScores();
+    private Map<String, Counter<String>> getMarginalizedScores(String scorerPath) {
+        Counter<List<String>> fullTable = getScores(scorerPath);
         Map<String, Counter<String>> ret = new HashMap<>();
 
         for (int i = 0; i < QUERY_VARS.size(); i++) {
@@ -356,7 +357,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         return ret.toString();
     }
 
-    private void buildScript(LexicalEntry<LogicalExpression> entry) throws IOException {
+    private String buildScript(LexicalEntry<LogicalExpression> entry) throws IOException {
         List<Syntax> allSyntaxes = new ArrayList<>(getFilterSyntaxes());
 
         // Make sure that queried entry appears in the support.
@@ -391,7 +392,9 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         Template tmpl = Mustache.compiler().escapeHTML(false).compile(templateReader);
         String scoreCode = tmpl.execute(tData);
 
-        Files.write(Paths.get(SCORER_PATH), Arrays.asList(scoreCode.split("\n")));
+        String scorerPath = String.format(SCORER_PATH, randomInts.nextInt());
+        Files.write(Paths.get(scorerPath), Arrays.asList(scoreCode.split("\n")));
+        return scorerPath;
     }
 
     /**
@@ -400,11 +403,11 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
      */
     private Counter<List<String>> getPosterior(LexicalEntry<LogicalExpression> entry) {
         try {
-            buildScript(entry);
-            Counter<List<String>> scores = getScores();
+            String scorerPath = buildScript(entry);
+            Counter<List<String>> scores = getScores(scorerPath);
 
-            System.out.printf("%30s\t%s\t%s\t%s\n", entry.getTokens(), entry.getCategory().getSyntax(),
-                    scores, getMarginalizedScores().get("attr"));
+            System.out.printf("%30s\t%s\t%s\n", entry.getTokens(), entry.getCategory().getSyntax(),
+                    scores);
             return scores;
         } catch (IOException e) {
             e.printStackTrace();
@@ -434,11 +437,6 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         //System.out.printf("%s %s %s %f\n", entry.getTokens(), entry.getCategory().getSyntax(), filterArguments, distribution.get(distKey));
 
         return distribution.get(distKey);
-    }
-
-    public static void main(String[] args) {
-        BayesianLexicalEntryScorer s = new BayesianLexicalEntryScorer(null, null, new UniformScorer<>(0.0));
-        s.getMarginalizedScores();
     }
 
     public static class Creator
