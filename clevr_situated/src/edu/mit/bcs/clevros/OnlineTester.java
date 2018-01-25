@@ -40,7 +40,6 @@ public class OnlineTester implements ILearnerListener {
 
     @Override
     public void finishedDataItem(IDataItem<?> dataItem) {
-        // TODO restrict only to data items compatible with current lexicon
         tester.test(model, stats);
         LOG.info("Online test results: \n%s", stats.toTabDelimitedString());
     }

@@ -198,6 +198,7 @@ public abstract class AbstractLearner<SAMPLE extends IDataItem<?>, DI extends IL
 
             // Iterating over training data
             for (final DI dataItem : trainingData) {
+                System.out.println("======= new DI");
                 // Process a single training sample
 
                 // Record start time

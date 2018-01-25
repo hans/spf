@@ -193,6 +193,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         for (Map.Entry<String, Set<LexicalEntry<LogicalExpression>>> entry : entries.entrySet()) {
             Counter<T> attrCounter = ret.get(entry.getKey());
             for (LexicalEntry<LogicalExpression> lexEntry : entry.getValue()) {
+                // TODO looks like we're double-counting here -- LexicalEntry.hashCode isn't working as desired
                 T entryKey = supportFunction.apply(lexEntry);
 
                 // Make sure this call isn't circular by forcing the score call to use the default score init function
