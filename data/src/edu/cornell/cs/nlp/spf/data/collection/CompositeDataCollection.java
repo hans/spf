@@ -63,6 +63,12 @@ public class CompositeDataCollection<DI extends IDataItem<?>>
 		return sum;
 	}
 
+	@Override
+	public void handleEpoch(int epoch) {
+		for (IDataCollection<? extends DI> dataset : datasets)
+			dataset.handleEpoch(epoch);
+	}
+
 	private Iterator<DI> createIterator() {
 		final List<Iterator<? extends DI>> iterators = new LinkedList<Iterator<? extends DI>>();
 		for (final IDataCollection<? extends DI> dataset : datasets) {
