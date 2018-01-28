@@ -6,3 +6,4 @@
 #type=data.clevr.situated id=clevrSimpleSimpleRef questionsFile=../../data/simplesimpleref_questions.json scenesFile=../../data/simpleref_scenes.json shuffle=true
 type=data.clevr.situated id=shapeColorTrain questionsFile=../../data/shapecolor_train_questions.json scenesFile=../../data/shapecolor_train_scenes.json shuffle=true
 type=data.clevr.situated id=shapeColorVal questionsFile=../../data/shapecolor_val_questions.json scenesFile=../../data/shapecolor_val_scenes.json shuffle=true
+type=data.subsampler id=shapeColorValSubsampled collection=shapeColorVal subsampleSize=5000
