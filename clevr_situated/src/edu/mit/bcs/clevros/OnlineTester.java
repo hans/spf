@@ -41,11 +41,14 @@ public class OnlineTester implements ILearnerListener {
 
     @Override
     public void finishedDataItem(IDataItem<?> dataItem) {
+        reset();
+
         // HACK: disable logging during this testing
         tester.LOG.setCustomLevel(LogLevel.NO_LOG);
         tester.test(model, stats);
         tester.LOG.clearCustomLevel();
 
         LOG.info("Online test results: \n%s", stats.toTabDelimitedString());
+        System.err.printf("Online test results: \n%s\n", stats.toTabDelimitedString());
     }
 }

@@ -134,6 +134,10 @@ public class SituatedTester<STATE, MR, ANSWER>
     private void test(IDataCollection<? extends LabeledSituatedSentence<STATE, ANSWER>> dataset,
                       IModelImmutable<SituatedSentence<STATE>, MR> model,
                       ISituatedTestingStatistics<SituatedSentence<STATE>, MR, ANSWER, LabeledSituatedSentence<STATE, ANSWER>> stats) {
+        // HACKY: Make sure the data collection acts as if we just finished an epoch. (Not always true, but necessary
+        // for e.g. online testing.)
+        dataset.handleEpoch(-1);
+
         int itemCounter = 0;
         for (final LabeledSituatedSentence<STATE, ANSWER> item : dataset) {
             ++itemCounter;
