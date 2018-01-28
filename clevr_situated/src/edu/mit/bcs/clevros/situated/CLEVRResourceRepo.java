@@ -62,6 +62,7 @@ import edu.mit.bcs.clevros.situated.data.SituatedCLEVRCollection;
 import edu.mit.bcs.clevros.data.CLEVRScene;
 import edu.mit.bcs.clevros.situated.data.CLEVRValidator;
 import edu.mit.bcs.clevros.genlex.ccg.template.coarse.SituatedTemplateCoarseGenlex;
+import edu.mit.bcs.clevros.situated.data.SubsamplingDataCollection;
 import edu.mit.bcs.clevros.situated.test.SituatedTester;
 
 public class CLEVRResourceRepo extends ResourceCreatorRepository {
@@ -99,6 +100,7 @@ public class CLEVRResourceRepo extends ResourceCreatorRepository {
 		registerResourceCreator(new SingleSentenceCollection.Creator());
 		registerResourceCreator(new SituatedCLEVRCollection.Creator());
 		registerResourceCreator(new CurriculumDataCollection.Creator<LabeledSituatedSentence<CLEVRScene, CLEVRAnswer>>());
+		registerResourceCreator(new SubsamplingDataCollection.Creator<LabeledSituatedSentence<CLEVRScene, CLEVRAnswer>>());
 		registerResourceCreator(
 				new ValidationPerceptron.Creator<Sentence, SingleSentence, LogicalExpression>());
 		registerResourceCreator(
