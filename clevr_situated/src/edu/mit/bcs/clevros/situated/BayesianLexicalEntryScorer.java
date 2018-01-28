@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.samskivert.mustache.Mustache;
 import com.samskivert.mustache.Template;
+import edu.cornell.cs.nlp.spf.base.token.TokenSeq;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Syntax;
 import edu.cornell.cs.nlp.spf.ccg.lexicon.ILexicon;
 import edu.cornell.cs.nlp.spf.ccg.lexicon.LexicalEntry;
@@ -61,6 +62,14 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         ATTRIBUTE_VALUES.put("color", Arrays.asList(CLEVRTypes.COLORS));
     }
 
+    private static final List<Syntax> SYNTAXES = Arrays.asList(Syntax.read("N"), Syntax.read("N/N"));
+
+    private static final Set<TokenSeq> IGNORE_LEX_ENTRIES = new HashSet<>();
+    static {
+        // HACK: don't let seed lexicon entries influence our priors over syntax <-> semantics mappings
+        IGNORE_LEX_ENTRIES.add(TokenSeq.of("x"));
+    }
+
     private ILexicon<LogicalExpression> lexicon;
     private IModelImmutable<?, LogicalExpression> model;
     private String lexiconId;
@@ -69,8 +78,6 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     private final IResourceRepository repo;
 
     private final IScorer<LexicalEntry<LogicalExpression>> defaultScorer;
-    private static final Set<Syntax> SUPPORTED_SYNTAXES =
-            new HashSet<>(Arrays.asList(Syntax.read("N"), Syntax.read("N/N")));
     private boolean alwaysDefault = true;
 
     private final PrimitiveIterator.OfInt randomInts = new Random().ints().iterator();
@@ -187,13 +194,8 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     private Set<WrappedLexicalEntry> getFilterLexicalEntries() {
         return getLexicon().toCollection().stream()
                 .filter(entry -> GetFilterArguments.of(entry.getCategory().getSemantics()) != null)
+                .filter(entry -> !IGNORE_LEX_ENTRIES.contains(entry.getTokens()))
                 .map(WrappedLexicalEntry::new)
-                .collect(Collectors.toSet());
-    }
-
-    private Set<Syntax> getFilterSyntaxes() {
-        return getFilterLexicalEntries().stream()
-                .map(WrappedLexicalEntry::getSyntax)
                 .collect(Collectors.toSet());
     }
 
@@ -358,18 +360,13 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     }
 
     private String buildScript(LexicalEntry<LogicalExpression> entry) throws IOException {
-        List<Syntax> allSyntaxes = new ArrayList<>(getFilterSyntaxes());
-
         // Make sure that queried entry appears in the support.
         Set<String> allTermsSet = getFilterTerms();
         allTermsSet.add(entry.getTokens().toString());
         List<String> allTerms = new ArrayList<>(allTermsSet);
 
-        List<String> allSyntaxStrings = allSyntaxes.stream()
-                .map(Syntax::toString).collect(Collectors.toList());
-
         // Calculate prior distributions from lexicon weights.
-        Map<String, Counter<Syntax>> syntaxPriors = buildSyntaxPriors(allSyntaxes);
+        Map<String, Counter<Syntax>> syntaxPriors = buildSyntaxPriors(SYNTAXES);
         Map<String, Counter<String>> termPriors = buildTermPriors(allTerms);
 
         List<String> allAttributes = new ArrayList<>(ATTRIBUTE_VALUES.keySet());
@@ -382,9 +379,9 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         HashMap<String, String> tData = new HashMap<>();
         tData.put("properties", gson.toJson(ATTRIBUTE_VALUES));
         tData.put("terms", gson.toJson(allTerms));
-        tData.put("syntaxes", gson.toJson(allSyntaxStrings));
+        tData.put("syntaxes", gson.toJson(SYNTAXES.stream().map(Syntax::toString).collect(Collectors.toList())));
         tData.put("termPriors", buildPriorString(termPriors, allAttributeValues, allTerms));
-        tData.put("syntaxPriors", buildPriorString(syntaxPriors, allAttributes, allSyntaxes));
+        tData.put("syntaxPriors", buildPriorString(syntaxPriors, allAttributes, SYNTAXES));
         tData.put("queryTerm", entry.getTokens().toString());
         tData.put("querySyntax", entry.getCategory().getSyntax().toString());
 
@@ -421,7 +418,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
             return defaultScorer.score(entry);
 
         // DEV: We only deal with a restricted syntax for now!
-        if (!SUPPORTED_SYNTAXES.contains(entry.getCategory().getSyntax()))
+        if (!SYNTAXES.contains(entry.getCategory().getSyntax()))
             return defaultScorer.score(entry);
 
         // DEV: Only deal with particular semantics for now!
