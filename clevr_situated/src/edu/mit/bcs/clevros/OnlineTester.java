@@ -8,6 +8,7 @@ import edu.cornell.cs.nlp.spf.learn.ILearnerListener;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
 import edu.cornell.cs.nlp.spf.parser.ccg.model.Model;
 import edu.cornell.cs.nlp.utils.log.ILogger;
+import edu.cornell.cs.nlp.utils.log.LogLevel;
 import edu.cornell.cs.nlp.utils.log.LoggerFactory;
 import edu.mit.bcs.clevros.data.CLEVRAnswer;
 import edu.mit.bcs.clevros.data.CLEVRScene;
@@ -40,7 +41,11 @@ public class OnlineTester implements ILearnerListener {
 
     @Override
     public void finishedDataItem(IDataItem<?> dataItem) {
+        // HACK: disable logging during this testing
+        tester.LOG.setCustomLevel(LogLevel.NO_LOG);
         tester.test(model, stats);
+        tester.LOG.clearCustomLevel();
+
         LOG.info("Online test results: \n%s", stats.toTabDelimitedString());
     }
 }
