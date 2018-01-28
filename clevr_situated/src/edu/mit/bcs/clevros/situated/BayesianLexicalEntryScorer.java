@@ -47,7 +47,7 @@ import java.util.stream.IntStream;
  */
 public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEntry<LogicalExpression>>, ILearnerListener {
 
-    private static final String SCRIPT_PATH = "./run_wppl";
+    private static final String SCRIPT_PATH = "webppl";
     private static final String SCORER_TEMPLATE_PATH = "syntaxGuidedScorer.wppl.template";
     private static final String SCORER_PATH = "syntaxGuidedScorer.%d.wppl";
 
