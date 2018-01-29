@@ -290,7 +290,8 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
             Process proc = pb.start();
 
             BufferedReader outReader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-            return (JSONArray) new JSONParser().parse(outReader);
+            JSONArray ret = (JSONArray) new JSONParser().parse(outReader);
+            return ret;
         } catch (IOException | ParseException e) {
             e.printStackTrace();
             System.exit(1);
@@ -408,6 +409,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         try {
             String scorerPath = buildScript(entry);
             Counter<List<String>> scores = getScores(scorerPath);
+            Files.delete(Paths.get(scorerPath));
 
             System.out.printf("%30s\t%s\t%s\n", entry.getTokens(), entry.getCategory().getSyntax(),
                     scores);
