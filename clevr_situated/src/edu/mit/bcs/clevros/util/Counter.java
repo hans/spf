@@ -3,6 +3,10 @@ package edu.mit.bcs.clevros.util;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Tracks unnormalized counts over a support of type `K`. Not thread-safe.
+ * @param <K>
+ */
 public class Counter<K> {
 
     private final double defaultValue;
@@ -60,6 +64,21 @@ public class Counter<K> {
 
         for (K key : map.keySet())
             map.compute(key, (k, v) -> v / sum * toSum);
+    }
+
+    public void pow(double power) {
+        for (K key : map.keySet())
+            map.compute(key, (k, v) -> Math.pow(v, power));
+    }
+
+    public void exp() {
+        for (K key : map.keySet())
+            map.compute(key, (k, v) -> Math.exp(v));
+    }
+
+    public void div(double x) {
+        for (K key : map.keySet())
+            map.compute(key, (k, v) -> v / x);
     }
 
     @Override

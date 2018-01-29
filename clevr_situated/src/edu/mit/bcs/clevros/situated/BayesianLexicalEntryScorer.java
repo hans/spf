@@ -248,9 +248,15 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
             }
         }
 
-        // DEV: this makes the Dirichlet priors look nice
-        for (String value : conditionalSupport)
-            ret.get(value).normalize(4);
+        // The lexicon yields weights over the posterior support. Adjust these with a temperature parameter
+        // and normalize.
+        double temperature = 5;
+        for (String value : conditionalSupport) {
+            Counter<T> counter = ret.get(value);
+            counter.div(temperature);
+            counter.exp();
+            counter.normalize(3);
+        }
 
         return ret;
     }
