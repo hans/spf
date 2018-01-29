@@ -22,13 +22,16 @@ import edu.cornell.cs.nlp.utils.collections.ListUtils;
 import edu.cornell.cs.nlp.utils.filter.IFilter;
 import edu.cornell.cs.nlp.utils.log.ILogger;
 import edu.cornell.cs.nlp.utils.log.LoggerFactory;
+import edu.mit.bcs.clevros.util.DummyLogger;
 
 import java.util.List;
 
 public class SituatedTester<STATE, MR, ANSWER>
         implements ISituatedTester<SituatedSentence<STATE>, MR, ANSWER, LabeledSituatedSentence<STATE, ANSWER>> {
 
-    public static final ILogger LOG = LoggerFactory.create(SituatedTester.class.getName());
+    private static final ILogger defaultLogger = LoggerFactory.create(SituatedTester.class.getName());
+    private static final ILogger dummyLogger = new DummyLogger();
+    private ILogger LOG = defaultLogger;
 
     private final IOutputLogger<MR> outputLogger;
 
@@ -52,6 +55,13 @@ public class SituatedTester<STATE, MR, ANSWER>
         LOG.info("Init Tester:  testData.size()=%d", testData.size());
     }
 
+    public void disableLogger() {
+        LOG = dummyLogger;
+    }
+
+    public void enableLogger() {
+        LOG = defaultLogger;
+    }
 
     @Override
     public void test(IModelImmutable<SituatedSentence<STATE>, MR> model,
