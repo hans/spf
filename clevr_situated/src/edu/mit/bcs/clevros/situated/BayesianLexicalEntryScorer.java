@@ -79,6 +79,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
 
     private final IScorer<LexicalEntry<LogicalExpression>> defaultScorer;
     private boolean alwaysDefault = true;
+    private final boolean forceDisable;
 
     private final Random random = new Random();
 
@@ -88,11 +89,13 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     private transient HashMap<Pair<String, Syntax>, Counter<List<String>>> cache = new HashMap<>();
 
     public BayesianLexicalEntryScorer(ILexicon<LogicalExpression> lexicon, Model model,
-                                      IScorer<LexicalEntry<LogicalExpression>> defaultScorer) {
+                                      IScorer<LexicalEntry<LogicalExpression>> defaultScorer,
+                                      boolean forceDisable) {
         this.repo = null;
         this.lexicon = lexicon;
         this.model = model;
         this.defaultScorer = defaultScorer;
+        this.forceDisable = forceDisable;
 
         checkScorer();
     }
@@ -102,11 +105,13 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
      * access. Store their IDs instead and lazy-load them.
      */
     public BayesianLexicalEntryScorer(IResourceRepository repo, String lexiconId, String modelId,
-                                      IScorer<LexicalEntry<LogicalExpression>> defaultScorer) {
+                                      IScorer<LexicalEntry<LogicalExpression>> defaultScorer,
+                                      boolean forceDisable) {
         this.repo = repo;
         this.lexiconId = lexiconId;
         this.modelId = modelId;
         this.defaultScorer = defaultScorer;
+        this.forceDisable = forceDisable;
 
         checkScorer();
     }
@@ -425,7 +430,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
 
     @Override
     public double score(LexicalEntry<LogicalExpression> entry) {
-        if (alwaysDefault)
+        if (alwaysDefault || forceDisable)
             return defaultScorer.score(entry);
 
         // DEV: We only deal with a restricted syntax for now!
@@ -458,9 +463,10 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
             IScorer<LexicalEntry<LogicalExpression>> defaultScorer = parameters.contains("defaultScorer")
                     ? resourceRepo.get(parameters.get("defaultScorer"))
                     : new UniformScorer<>(0.0);
+            boolean forceDisable = parameters.getAsBoolean("forceDisable", false);
 
             return new BayesianLexicalEntryScorer(resourceRepo, parameters.get("lexicon"),
-                    parameters.get("model"), defaultScorer);
+                    parameters.get("model"), defaultScorer, forceDisable);
         }
 
         @Override
