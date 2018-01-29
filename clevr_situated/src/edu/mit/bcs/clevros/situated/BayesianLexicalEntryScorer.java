@@ -80,7 +80,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     private final IScorer<LexicalEntry<LogicalExpression>> defaultScorer;
     private boolean alwaysDefault = true;
 
-    private final PrimitiveIterator.OfInt randomInts = new Random().ints().iterator();
+    private final Random random = new Random();
 
     /**
      * Caches posterior predictive distributions computed for a particular model state.
@@ -399,7 +399,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         Template tmpl = Mustache.compiler().escapeHTML(false).compile(templateReader);
         String scoreCode = tmpl.execute(tData);
 
-        String scorerPath = String.format(SCORER_PATH, randomInts.nextInt());
+        String scorerPath = String.format(SCORER_PATH, random.nextInt());
         Files.write(Paths.get(scorerPath), Arrays.asList(scoreCode.split("\n")));
         return scorerPath;
     }
