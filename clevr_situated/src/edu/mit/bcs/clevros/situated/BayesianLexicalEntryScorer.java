@@ -239,7 +239,8 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     private <T> Map<String, Counter<T>> buildPriorDistribution(List<String> conditionalSupport,
                                                                List<T> support,
                                                                Function<WrappedLexicalEntry, String> conditionalFunction,
-                                                               Function<WrappedLexicalEntry, T> supportFunction) {
+                                                               Function<WrappedLexicalEntry, T> supportFunction,
+                                                               double temperature) {
         Map<String, Counter<T>> ret = new HashMap<>();
 
         // Collect LexicalEntry instances associated with each attribute type.
@@ -271,7 +272,6 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
 
         // The lexicon yields weights over the posterior support. Adjust these with a temperature parameter
         // and normalize.
-        double temperature = 5;
         for (String value : conditionalSupport) {
             Counter<T> counter = ret.get(value);
             counter.div(temperature);
@@ -290,7 +290,8 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
                 ATTRIBUTES,
                 support,
                 (entry) -> GetFilterArguments.of(entry.getSemantics()).first(),
-                (entry) -> entry.getSyntax());
+                (entry) -> entry.getSyntax(),
+                5.0);
     }
 
     /**
@@ -301,7 +302,8 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
                 ATTRIBUTE_VALUES.values().stream().flatMap(List::stream).collect(Collectors.toList()),
                 support,
                 entry -> GetFilterArguments.of(entry.getSemantics()).second(),
-                entry -> entry.getTerm());
+                entry -> entry.getTerm(),
+                1.0);
     }
 
     private JSONArray runScorer(String scorerPath) {
