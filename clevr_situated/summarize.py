@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from pprint import pprint
 
 import matplotlib
 matplotlib.use("Agg")
@@ -12,20 +13,45 @@ import scipy.stats as st
 sns.set(color_codes=True)
 
 
-
 def main(args):
   results = []
   for file in args.files:
     file = file.strip()
     results_i = pd.read_table(file, index_col=0)
-    results_i = results_i[results_i.index < 200]
     results_i['run'] = file
     results_i = results_i.set_index('run', append=True).reorder_levels(['run', 'i'])
     results.append(results_i)
 
-  results = pd.concat(results)
+  results = pd.concat(results).reset_index()
 
-  results = results.reset_index().melt(id_vars=['i', 'run'], value_vars=['precision', 'recall'])
+  # Trim time series.
+  trim_time = 200
+  results = results[results.i <= trim_time]
+
+  # Pad time series to maximum time.
+  max_time = min(results.agg({"i": "max"})[0], trim_time)
+  runs = results.groupby("run")
+  last_scores = {run: vals.loc[vals.i.idxmax()] for run, vals in runs}
+  to_append = []
+  for run, vals in runs:
+    last_row = vals.loc[vals.i.idxmax()]
+    last_time = last_row["i"]
+
+    if last_row["f1"] != 1.0:
+      # Don't pad crashed runs.
+      continue
+
+    for i in range(last_time + 1, max_time + 1):
+      padding_el = last_row.copy()
+      padding_el["i"] = i
+      to_append.append(padding_el)
+
+  if to_append:
+    results = results.append(to_append, ignore_index=True)
+
+  #########
+
+  results = results.melt(id_vars=['i', 'run'], value_vars=['precision', 'recall'])
   print(results)
   sns.tsplot(data=results, time='i', unit='run', condition='variable', value='value')
 
