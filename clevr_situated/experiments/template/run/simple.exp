@@ -1,7 +1,7 @@
 include=../../params.inc
 gThreads=1
-outputDir=../../out/logs_bayesian_<idx>
-globalLog=../../out/logs_bayesian_<idx>/global.log
+outputDir=../../out/logs_bayesian
+globalLog=../../out/logs_bayesian/global.log
 
 # Resources
 # Parser
@@ -14,8 +14,8 @@ include=../../validation.inc
 include=../genlex.inc
 # Training and testing sets
 include=../data.inc
-type=data.composite id=train sets=clevrSimpleSimpleRef
-type=data.composite id=test sets=clevrSimpleSimpleRef
+type=data.composite id=train sets=shapeColorTrain
+type=data.composite id=test sets=shapeColorValSubsampled
 # Learner and tester
 include=../learn.inc
 # Initializars
