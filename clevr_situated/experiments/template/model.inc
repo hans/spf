@@ -1,6 +1,6 @@
 ## Default scorers
 type=scorer.uniform id=uniform0Scorer   class=lexEntry  weight=0.0
-type=scorer.bayesian id=bayesianScorer defaultScorer=uniform0Scorer lexicon=lexicon model=model scorerTemplate=flat forceDisable=true
+type=scorer.bayesian id=bayesianScorer defaultScorer=uniform0Scorer lexicon=lexicon model=model
 ## Features
 type=feat.logexp.coordination id=featLogexpCoordination cpp1=true cpap=true rept=true
 type=feat.lex.factored id=featLex templateScale=0.0 lexemeScale=0.0 entryScorer=bayesianScorer

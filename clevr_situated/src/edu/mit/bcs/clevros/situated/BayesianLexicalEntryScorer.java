@@ -61,7 +61,12 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     private static final List<String> ATTRIBUTES = Arrays.asList("shape", "color");
     private static final Map<String, List<String>> ATTRIBUTE_VALUES = new HashMap<>();
     static {
-        ATTRIBUTE_VALUES.put("shape", Arrays.asList(CLEVRTypes.SHAPES));
+//        ATTRIBUTE_VALUES.put("shape", Arrays.asList(CLEVRTypes.SHAPES));
+        // DEV: balance shape / color ratio
+        List<String> shapes = new ArrayList<>(Arrays.asList(CLEVRTypes.SHAPES));
+        for (int i = 0; i < 5; i++ ) shapes.add("s" + i);
+        ATTRIBUTE_VALUES.put("shape", shapes);
+
         ATTRIBUTE_VALUES.put("color", Arrays.asList(CLEVRTypes.COLORS));
     }
 
