@@ -1,0 +1,66 @@
+var properties = {{properties}}
+
+var terms = {{terms}}
+var syntaxes = {{syntaxes}}
+
+var syntaxPrior = {{syntaxPriors}}
+var termPrior = {{termPriors}}
+
+var query = function(querier) {return function() {
+  // prior p(attribute type)
+  var attr = Categorical({vs: _.keys(properties)})
+
+  // p(attribute value | attribute type) -- e.g. p(color | attribute type == color)
+  var attrVal = mem(function(attr) {
+    return Categorical({vs: properties[attr], ps: ones([properties[attr].length, 1])})
+  })
+
+  var term = mem(function(attrVal) {
+    return Categorical({vs: terms, ps: sample(termPrior[attrVal])})
+  })
+
+  // p(syntax | attribute type)
+  var syntax = mem(function(attr) {
+    return Categorical({vs: syntaxes, ps: sample(syntaxPrior[attr])})
+  })
+
+  querier(attr, attrVal, term, syntax)
+}}
+
+var listener1 = function(qTerm, qSyntax) {
+  Infer({method: "SMC", particles: 1000},
+        query(function(attr, attrVal, term, syntax) {
+    var qAttr = sample(attr);
+    var qAttrVal = sample(attrVal(qAttr));
+    observe(term(qAttrVal), qTerm);
+    observe(syntax(qAttr), qSyntax);
+    return {attr: qAttr, attrVal: qAttrVal}
+  }))
+}
+
+var alpha = 1
+var speaker = function(qAttr, qAttrVal) {
+  Infer({method: "SMC", particles: 20},
+        query(function(attr, attrVal, term, syntax) {
+    var qSyntax = sample(syntax(qAttr))
+    var qTerm = sample(term(qAttrVal))
+    factor(alpha * listener1(qTerm, qSyntax).score({attr: qAttr, attrVal: qAttrVal}))
+    return {syntax: qSyntax, term: qTerm}
+  }))
+}
+
+var listener2 = function(qTerm, qSyntax) {
+  Infer({method: "SMC", particles: 50},
+        query(function(attr, attrVal, term, syntax) {
+    var qAttr = sample(attr);
+    var qAttrVal = sample(attrVal(qAttr));
+    observe(speaker(qAttr, qAttrVal), {syntax: qSyntax, term: qTerm});
+    return {attr: qAttr, attrVal: qAttrVal}
+  }))
+}
+
+var posterior = listener1("{{queryTerm}}", "{{querySyntax}}")
+
+JSON.stringify(map(function(val) {
+  [val, Math.exp(posterior.score(val))]
+}, posterior.support()))

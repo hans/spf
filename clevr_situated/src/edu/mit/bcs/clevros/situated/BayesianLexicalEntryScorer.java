@@ -35,7 +35,6 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * A scorer which uses a Bayesian model to compute prior weights
@@ -49,7 +48,11 @@ import java.util.stream.IntStream;
 public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEntry<LogicalExpression>>, ILearnerListener {
 
     private static final String SCRIPT_PATH = "webppl";
-    private static final String SCORER_TEMPLATE_PATH = "syntaxGuidedScorer.wppl.template";
+    private static final Map<String, String> SCORER_TEMPLATE_PATHS = new HashMap<>();
+    static {
+        SCORER_TEMPLATE_PATHS.put("hierarchical", "syntaxGuidedScorer.wppl.template");
+        SCORER_TEMPLATE_PATHS.put("flat", "syntaxGuidedScorer.flat.wppl.template");
+    }
     private static final String SCORER_PATH = "syntaxGuidedScorer.%d.wppl";
 
     private static final List<String> QUERY_VARS = Arrays.asList("attr", "attrVal");
@@ -74,6 +77,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     private IModelImmutable<?, LogicalExpression> model;
     private String lexiconId;
     private String modelId;
+    private final String scorerTemplate;
 
     private final IResourceRepository repo;
 
@@ -90,11 +94,12 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
 
     public BayesianLexicalEntryScorer(ILexicon<LogicalExpression> lexicon, Model model,
                                       IScorer<LexicalEntry<LogicalExpression>> defaultScorer,
-                                      boolean forceDisable) {
+                                      String scorerTemplate, boolean forceDisable) {
         this.repo = null;
         this.lexicon = lexicon;
         this.model = model;
         this.defaultScorer = defaultScorer;
+        this.scorerTemplate = scorerTemplate;
         this.forceDisable = forceDisable;
 
         checkScorer();
@@ -106,11 +111,12 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
      */
     public BayesianLexicalEntryScorer(IResourceRepository repo, String lexiconId, String modelId,
                                       IScorer<LexicalEntry<LogicalExpression>> defaultScorer,
-                                      boolean forceDisable) {
+                                      String scorerTemplate, boolean forceDisable) {
         this.repo = repo;
         this.lexiconId = lexiconId;
         this.modelId = modelId;
         this.defaultScorer = defaultScorer;
+        this.scorerTemplate = scorerTemplate;
         this.forceDisable = forceDisable;
 
         checkScorer();
@@ -136,9 +142,14 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         return model;
     }
 
+    private String getScorerTemplatePath() {
+        return SCORER_TEMPLATE_PATHS.get(scorerTemplate);
+    }
+
     private void checkScorer() {
-        if (!new File(SCORER_TEMPLATE_PATH).exists())
-            throw new RuntimeException("cannot find scorer template file at " + SCORER_TEMPLATE_PATH);
+        String path = getScorerTemplatePath();
+        if (!new File(path).exists())
+            throw new RuntimeException("cannot find scorer template file at " + path);
     }
 
     public void clearCache() {
@@ -400,7 +411,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         tData.put("queryTerm", entry.getTokens().toString());
         tData.put("querySyntax", entry.getCategory().getSyntax().toString());
 
-        BufferedReader templateReader = new BufferedReader(new FileReader(SCORER_TEMPLATE_PATH));
+        BufferedReader templateReader = new BufferedReader(new FileReader(getScorerTemplatePath()));
         Template tmpl = Mustache.compiler().escapeHTML(false).compile(templateReader);
         String scoreCode = tmpl.execute(tData);
 
@@ -463,10 +474,11 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
             IScorer<LexicalEntry<LogicalExpression>> defaultScorer = parameters.contains("defaultScorer")
                     ? resourceRepo.get(parameters.get("defaultScorer"))
                     : new UniformScorer<>(0.0);
+            String scorerTemplate = parameters.get("scorerTemplate", "hierarchical");
             boolean forceDisable = parameters.getAsBoolean("forceDisable", false);
 
             return new BayesianLexicalEntryScorer(resourceRepo, parameters.get("lexicon"),
-                    parameters.get("model"), defaultScorer, forceDisable);
+                    parameters.get("model"), defaultScorer, scorerTemplate, forceDisable);
         }
 
         @Override
