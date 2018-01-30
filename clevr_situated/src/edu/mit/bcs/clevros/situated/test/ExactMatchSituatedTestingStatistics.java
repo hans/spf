@@ -26,6 +26,7 @@ import edu.cornell.cs.nlp.spf.test.stats.IStatistics;
 import edu.cornell.cs.nlp.spf.test.stats.SimpleStats;
 import edu.cornell.cs.nlp.utils.log.ILogger;
 import edu.cornell.cs.nlp.utils.log.LoggerFactory;
+import edu.mit.bcs.clevros.util.DummyLogger;
 
 import java.util.List;
 
@@ -40,8 +41,9 @@ import java.util.List;
  */
 public class ExactMatchSituatedTestingStatistics<SAMPLE, MR, LABEL, DI extends ILabeledDataItem<SAMPLE, LABEL>>
 		extends AbstractSituatedTestingStatistics<SAMPLE, MR, LABEL, DI> {
-	public static final ILogger	LOG					= LoggerFactory
-															.create(ExactMatchSituatedTestingStatistics.class);
+	private static final ILogger defaultLogger = LoggerFactory.create(ExactMatchSituatedTestingStatistics.class);
+	private static final ILogger dummyLogger = new DummyLogger();
+	private ILogger LOG = defaultLogger;
 
 	private static final String	DEFAULT_METRIC_NAME	= "EXACT_SITUATED";
 
@@ -59,6 +61,14 @@ public class ExactMatchSituatedTestingStatistics<SAMPLE, MR, LABEL, DI extends I
                                                IStatistics<SAMPLE> stats) {
 		super(prefix, metricName, stats);
 		this.validator = validator;
+	}
+
+	public void disableLogger() {
+		LOG = dummyLogger;
+	}
+
+	public void enableLogger() {
+		LOG = defaultLogger;
 	}
 
 	@Override

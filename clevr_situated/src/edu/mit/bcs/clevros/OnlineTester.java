@@ -45,8 +45,10 @@ public class OnlineTester implements ILearnerListener {
 
         // HACK: disable logging during this testing
         tester.disableLogger();
+        stats.disableLogger();
         tester.test(model, stats);
         tester.enableLogger();
+        stats.enableLogger();
 
         LOG.info("Online test results: \n%s", stats.toTabDelimitedString());
         System.err.printf("Online test results: \n%s\n", stats.toTabDelimitedString());
