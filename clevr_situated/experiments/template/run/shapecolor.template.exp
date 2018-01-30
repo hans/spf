@@ -1,5 +1,4 @@
 include=../../params.inc
-gThreads=1
 outputDir=../../out/logs_bayesian_<idx>
 globalLog=../../out/logs_bayesian_<idx>/global.log
 
