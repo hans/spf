@@ -442,7 +442,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     @Override
     public double score(LexicalEntry<LogicalExpression> entry) {
         if (alwaysDefault || forceDisable)
-            return defaultScorer.score(entry);
+            return defaultScorer.score(entry) + random.nextDouble() * 0.0001;
 
         // DEV: We only deal with a restricted syntax for now!
         if (!SYNTAXES.contains(entry.getCategory().getSyntax()))
