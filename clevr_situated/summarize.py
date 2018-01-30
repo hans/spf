@@ -52,16 +52,27 @@ def main(args):
   #########
 
   results = results.melt(id_vars=['i', 'run'], value_vars=['precision', 'recall'])
-  print(results)
-  sns.tsplot(data=results, time='i', unit='run', condition='variable', value='value')
 
-  plt.tight_layout()
-  plt.savefig("test.png")
+  if args.img_out:
+    sns.tsplot(data=results, time='i', unit='run', condition='variable', value='value')
+
+    plt.tight_layout()
+    plt.savefig(args.img_out)
+
+  if args.tsv_out:
+    if not args.condition:
+      raise ValueError("must provide --condition to output tsv")
+    results["condition"] = args.condition
+    results.to_csv(args.tsv_out, sep="\t", columns=["i", "condition", "run", "variable", "value"],
+                   header=False, mode="a")
 
 
 if __name__ == '__main__':
   p = ArgumentParser()
 
   p.add_argument("files", action="store", nargs="+")
+  p.add_argument("--img-out")
+  p.add_argument("--condition")
+  p.add_argument("--tsv-out")
 
   main(p.parse_args())
