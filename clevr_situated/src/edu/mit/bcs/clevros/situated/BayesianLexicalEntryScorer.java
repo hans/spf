@@ -48,12 +48,16 @@ import java.util.stream.Collectors;
 public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEntry<LogicalExpression>>, ILearnerListener {
 
     private static final String SCRIPT_PATH = "webppl";
+
     private static final Map<String, String> SCORER_TEMPLATE_PATHS = new HashMap<>();
     static {
         SCORER_TEMPLATE_PATHS.put("hierarchical", "syntaxGuidedScorer.wppl.template");
         SCORER_TEMPLATE_PATHS.put("flat", "syntaxGuidedScorer.flat.wppl.template");
     }
     private static final String SCORER_PATH = "syntaxGuidedScorer.%d.wppl";
+
+    private static final String SYNTAX_SUMMARY_TEMPLATE_PATH = "syntaxSummary.wppl.template";
+    private static final String SYNTAX_SUMMARY_PATH = "syntaxSummary.%d.wppl";
 
     private static final List<String> QUERY_VARS = Arrays.asList("attr", "attrVal");
     private static final Set<String> QUERY_VARS_SET = new HashSet<>(QUERY_VARS);
@@ -159,6 +163,13 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
     @Override
     public void beganDataItem(IDataItem<?> dataItem) {
         clearCache();
+    }
+
+    @Override
+    public void finishedDataItem(IDataItem<?> dataItem) {
+        // Output shape priors p(attr value | syntax = N/N).
+        Counter<String> nnPosterior = getNNPosterior();
+        System.out.printf("N/N posterior: shape=%.3f\tcolor=%.3f\n", nnPosterior.get("shape"), nnPosterior.get("color"));
     }
 
     /**
@@ -347,25 +358,33 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         return ret;
     }
 
-    /**
-     * Execute the prepared Bayesian model and return marginal distributions for each of {@link #QUERY_VARS}.
-     */
-    private Map<String, Counter<String>> getMarginalizedScores(String scorerPath) {
-        Counter<List<String>> fullTable = getScores(scorerPath);
-        Map<String, Counter<String>> ret = new HashMap<>();
+    private Counter<String> getMarginalScores(String scorerPath) {
+        JSONArray scores = runScorer(scorerPath);
+        Counter<String> ret = new Counter<>();
 
-        for (int i = 0; i < QUERY_VARS.size(); i++) {
-            String var = QUERY_VARS.get(i);
+        for (Object scoreEl : scores) {
+            JSONArray scoreTuple = (JSONArray) scoreEl;
+            String attr = (String) scoreTuple.get(0);
+            double score = scoreTuple.get(1) instanceof Long
+                    ? (double) (long) scoreTuple.get(1) : (double) scoreTuple.get(1);
 
-            Counter<String> marginalized = new Counter<>();
-            for (Map.Entry<List<String>, Double> entry : fullTable.entrySet()) {
-                marginalized.addTo(entry.getKey().get(i), entry.getValue());
-            }
-
-            marginalized.normalize();
-            ret.put(var, marginalized);
+            ret.addTo(attr, score);
         }
 
+        return ret;
+    }
+
+    /**
+     * Marginalize on one posterior query variable given the joint distribution.
+     */
+    private Counter<String> marginalizeScores(Counter<List<String>> scores, int idx) {
+        Counter<String> ret = new Counter<>();
+
+        for (Map.Entry<List<String>, Double> entry : scores.entrySet()) {
+            ret.addTo(entry.getKey().get(idx), entry.getValue());
+        }
+
+        ret.normalize();
         return ret;
     }
 
@@ -393,10 +412,20 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         return ret.toString();
     }
 
-    private String buildScript(LexicalEntry<LogicalExpression> entry) throws IOException {
+    /**
+     * Generate a WebPPL script for the given template querying (optionally) on the given lexical entry.
+     * @param templatePath
+     * @param outPathFormat
+     * @param entry
+     * @return
+     * @throws IOException
+     */
+    private String buildScript(String templatePath, String outPathFormat,
+                               LexicalEntry<LogicalExpression> entry) throws IOException {
         // Make sure that queried entry appears in the support.
         Set<String> allTermsSet = getFilterTerms();
-        allTermsSet.add(entry.getTokens().toString());
+        if (entry != null)
+            allTermsSet.add(entry.getTokens().toString());
         List<String> allTerms = new ArrayList<>(allTermsSet);
 
         // Calculate prior distributions from lexicon weights.
@@ -416,14 +445,17 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         tData.put("syntaxes", gson.toJson(SYNTAXES.stream().map(Syntax::toString).collect(Collectors.toList())));
         tData.put("termPriors", buildPriorString(termPriors, allAttributeValues, allTerms));
         tData.put("syntaxPriors", buildPriorString(syntaxPriors, allAttributes, SYNTAXES));
-        tData.put("queryTerm", entry.getTokens().toString());
-        tData.put("querySyntax", entry.getCategory().getSyntax().toString());
 
-        BufferedReader templateReader = new BufferedReader(new FileReader(getScorerTemplatePath()));
+        if (entry != null) {
+            tData.put("queryTerm", entry.getTokens().toString());
+            tData.put("querySyntax", entry.getCategory().getSyntax().toString());
+        }
+
+        BufferedReader templateReader = new BufferedReader(new FileReader(templatePath));
         Template tmpl = Mustache.compiler().escapeHTML(false).compile(templateReader);
         String scoreCode = tmpl.execute(tData);
 
-        String scorerPath = String.format(SCORER_PATH, random.nextInt());
+        String scorerPath = String.format(outPathFormat, random.nextInt());
         Files.write(Paths.get(scorerPath), Arrays.asList(scoreCode.split("\n")));
         return scorerPath;
     }
@@ -432,15 +464,34 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
      * Get the posterior predictive joint distribution over (attribute type, attribute value)
      * for a given LexicalEntry.
      */
-    private Counter<List<String>> getPosterior(LexicalEntry<LogicalExpression> entry) {
+    private Counter<List<String>> getJointPosterior(LexicalEntry<LogicalExpression> entry) {
         try {
-            String scorerPath = buildScript(entry);
+            String scorerPath = buildScript(getScorerTemplatePath(), SCORER_PATH, entry);
             Counter<List<String>> scores = getScores(scorerPath);
             Files.delete(Paths.get(scorerPath));
 
             System.out.printf("%30s\t%s\t%s\n", entry.getTokens(), entry.getCategory().getSyntax(),
                     scores);
+
+//            // Also track marginal scores for each syntax -- attribute type mapping.
+//            System.out.printf("%30s\t%s\t%s\n", "",
+//                    entry.getCategory().getSyntax(), marginalizeScores(scores, QUERY_VARS.indexOf("attr")));
+
             return scores;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Get the current marginal prediction p(attr value | syntax).
+     */
+    private Counter<String> getNNPosterior() {
+        try {
+            String scorerPath = buildScript(SYNTAX_SUMMARY_TEMPLATE_PATH, SYNTAX_SUMMARY_PATH, null);
+            Counter<String> marginalScores = getMarginalScores(scorerPath);
+            return marginalScores;
         } catch (IOException e) {
             e.printStackTrace();
             return null;
@@ -461,12 +512,10 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
             return defaultScorer.score(entry);
 
         Pair<String, Syntax> cacheKey = Pair.of(entry.getTokens().toString(), entry.getCategory().getSyntax());
-        Counter<List<String>> distribution = cache.computeIfAbsent(cacheKey, k -> getPosterior(entry));
+        Counter<List<String>> distribution = cache.computeIfAbsent(cacheKey, k -> getJointPosterior(entry));
 
         Pair<String, String> filterArguments = GetFilterArguments.of(entry.getCategory().getSemantics());
         List<String> distKey = Arrays.asList(filterArguments.first(), filterArguments.second());
-
-        //System.out.printf("%s %s %s %f\n", entry.getTokens(), entry.getCategory().getSyntax(), filterArguments, distribution.get(distKey));
 
         return distribution.get(distKey);
     }

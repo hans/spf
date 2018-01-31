@@ -1,0 +1,38 @@
+var properties = {{properties}}
+
+var terms = {{terms}}
+var syntaxes = {{syntaxes}}
+
+var syntaxPrior = {{syntaxPriors}}
+var termPrior = {{termPriors}}
+
+var query = function(querier) {return function() {
+  // prior p(attribute type)
+  var attr = Categorical({vs: _.keys(properties)})
+
+  // p(attribute value | attribute type) -- e.g. p(color | attribute type == color)
+  var attrVal = mem(function(attr) {
+    return Categorical({vs: properties[attr], ps: ones([properties[attr].length, 1])})
+  })
+
+  var term = mem(function(attrVal) {
+    return Categorical({vs: terms, ps: sample(termPrior[attrVal])})
+  })
+
+  // p(syntax | attribute type)
+  var syntax = mem(function(attr) {
+    return Categorical({vs: syntaxes, ps: sample(syntaxPrior[attr])})
+  })
+
+  querier(attr, attrVal, term, syntax)
+}}
+
+var posterior = Infer({method: "SMC", particles: 1000}, query(function(attr, attrVal, term, syntax) {
+    var qAttr = sample(attr)
+    observe(syntax(qAttr), "N/N")
+    return qAttr
+}))
+
+JSON.stringify(map(function(val) {
+  [val, Math.exp(posterior.score(val))]
+}, posterior.support()))
