@@ -6,8 +6,8 @@ import random
 import numpy as np
 
 
-SHAPES = ["s%i" % i for i in range(100)]
-COLORS = ["c%i" % i for i in range(100)]
+SHAPES = ["s%i" % i for i in range(20)]
+COLORS = ["c%i" % i for i in range(20)]
 MATERIALS = ["rubber", "metal"]
 SIZES = ["large", "small"]
 
