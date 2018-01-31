@@ -8,6 +8,8 @@ import numpy as np
 
 SHAPES = ["pyramid", "disc", "cube", "box", "sphere", "cylinder", "donut", "wedge", "cone"]
 COLORS = ["red", "black", "green", "blue", "white", "orange", "brown", "gray", "cyan"]
+MATERIALS = ["rubber", "metal"]
+SIZES = ["large", "small"]
 
 
 def make_obj_answer(idx):
@@ -28,8 +30,15 @@ def yield_scenes():
 
     yield {
         "image_index": i,
-        "objects": [{"shape": shape, "color": color} for shape, color in objects]
-    }
+        "objects": [{"shape": random.choice(SHAPES),
+                     "color": random.choice(COLORS),
+                     "material": random.choice(MATERIALS),
+                     "size": random.choice(SIZES),
+                     "rotation": 0.0,
+                     "3d_coords": [0.0, 0.0, 0.0]}
+                     for _ in range(n_objects)]
+      }
+
 
     i += 1
 

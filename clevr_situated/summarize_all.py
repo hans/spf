@@ -16,6 +16,8 @@ def main(args):
 
   sns.tsplot(data=results, time="i", unit="run", condition="condition", value="value")
 
+  plt.xlabel("# examples")
+  plt.ylabel("Recall")
   plt.tight_layout()
   plt.savefig(args.img_out)
 
