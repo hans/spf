@@ -81,7 +81,7 @@ public class SituatedCLEVRExperiment extends DistributedExperiment {
 		// //////////////////////////////////////////
 		final File typesFile = globalParams.getAsFile("types");
 		// Seed lexicon used solely to generate LF templates; lexical entries are not stored.
-		final List<File> templateSeedlex = globalParams.getAsFiles("templateSeedlex");
+//		final List<File> templateSeedlex = globalParams.getAsFiles("templateSeedlex");
 		// Seed lexicon which is retained in full in the model lexicon.
 		final List<File> seedlexFiles = globalParams.getAsFiles("seedlex");
 
@@ -138,7 +138,7 @@ public class SituatedCLEVRExperiment extends DistributedExperiment {
 		// Initial lexicon
 		// //////////////////////////////////////////////////
 
-		Lexicon<LogicalExpression> templateSeeds = readSeedLexicons(templateSeedlex);
+//		Lexicon<LogicalExpression> templateSeeds = readSeedLexicons(templateSeedlex);
 		Lexicon<LogicalExpression> seedLexicon = readSeedLexicons(seedlexFiles);
 
 		storeResource("seedLexicon", seedLexicon);
