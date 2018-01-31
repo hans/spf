@@ -312,6 +312,12 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
                 JSONArray ret = (JSONArray) new JSONParser().parse(outReader);
                 return ret;
             } catch (IOException | ParseException e) {
+                System.err.println("error executing " + scorerPath + " :");
+                try {
+                    Files.copy(Paths.get(scorerPath), Paths.get(scorerPath + ".bk"));
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
                 e.printStackTrace();
             }
         }
