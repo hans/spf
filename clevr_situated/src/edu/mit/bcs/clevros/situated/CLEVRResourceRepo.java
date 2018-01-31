@@ -16,6 +16,7 @@
  *******************************************************************************/
 package edu.mit.bcs.clevros.situated;
 
+import edu.cornell.cs.nlp.spf.ccg.lexicon.Lexicon;
 import edu.cornell.cs.nlp.spf.ccg.lexicon.factored.lambda.FactoredLexicon;
 import edu.cornell.cs.nlp.spf.data.collection.CompositeDataCollection;
 import edu.cornell.cs.nlp.spf.data.sentence.Sentence;
@@ -96,6 +97,7 @@ public class CLEVRResourceRepo extends ResourceCreatorRepository {
 		registerResourceCreator(
 				new LogicalExpressionCoordinationFeatureSet.Creator<Sentence>());
 		registerResourceCreator(new FactoredLexicon.Creator());
+		registerResourceCreator(new Lexicon.Creator<LogicalExpression>());
 		registerResourceCreator(new SituatedTemplateCoarseGenlex.Creator<SituatedSentence<CLEVRScene>, LabeledSituatedSentence<CLEVRScene, CLEVRAnswer>>());
 		registerResourceCreator(new SingleSentenceCollection.Creator());
 		registerResourceCreator(new SituatedCLEVRCollection.Creator());
