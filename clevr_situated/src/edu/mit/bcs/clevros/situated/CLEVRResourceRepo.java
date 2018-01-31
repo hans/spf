@@ -38,6 +38,7 @@ import edu.cornell.cs.nlp.spf.parser.ccg.cky.single.CKYParser;
 import edu.cornell.cs.nlp.spf.parser.ccg.factoredlex.features.FactoredLexicalFeatureSet;
 import edu.cornell.cs.nlp.spf.parser.ccg.factoredlex.features.scorers.LexemeCooccurrenceScorer;
 import edu.cornell.cs.nlp.spf.parser.ccg.features.basic.DynamicWordSkippingFeatures;
+import edu.cornell.cs.nlp.spf.parser.ccg.features.basic.LexicalFeatureSet;
 import edu.cornell.cs.nlp.spf.parser.ccg.features.basic.LexicalFeaturesInit;
 import edu.cornell.cs.nlp.spf.parser.ccg.features.basic.RuleUsageFeatureSet;
 import edu.cornell.cs.nlp.spf.parser.ccg.features.basic.scorer.ExpLengthLexicalEntryScorer;
@@ -91,6 +92,7 @@ public class CLEVRResourceRepo extends ResourceCreatorRepository {
 		registerResourceCreator(new UniformScorer.Creator<LogicalExpression>());
 		registerResourceCreator(
 				new FactoredLexicalFeatureSet.Creator<Sentence>());
+		registerResourceCreator(new LexicalFeatureSet.Creator<LabeledSituatedSentence<CLEVRScene, CLEVRAnswer>, LogicalExpression>());
 		registerResourceCreator(
 				new SkippingSensitiveLexicalEntryScorer.Creator<LogicalExpression>());
 		registerResourceCreator(new BayesianLexicalEntryScorer.Creator());
