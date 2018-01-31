@@ -44,21 +44,23 @@ public class CLEVRScene {
         }
 
         JSONObject relationships = (JSONObject) scene.get("relationships");
-        for (CLEVRRelation relation : CLEVRRelation.values()) {
-            JSONArray allIdxs = (JSONArray) relationships.get(relation.toString().toLowerCase());
-            Map<CLEVRObject, Set<CLEVRObject>> allInstances = new HashMap<>();
+        if (relationships != null) {
+            for (CLEVRRelation relation : CLEVRRelation.values()) {
+                JSONArray allIdxs = (JSONArray) relationships.get(relation.toString().toLowerCase());
+                Map<CLEVRObject, Set<CLEVRObject>> allInstances = new HashMap<>();
 
-            for (int i = 0; i < allIdxs.size(); i++) {
-                JSONArray idxs = (JSONArray) allIdxs.get(i);
-                Set<CLEVRObject> objRelations = new HashSet<>();
-                for (Object idx : idxs) {
-                    objRelations.add(objects.get(((Long) idx).intValue()));
+                for (int i = 0; i < allIdxs.size(); i++) {
+                    JSONArray idxs = (JSONArray) allIdxs.get(i);
+                    Set<CLEVRObject> objRelations = new HashSet<>();
+                    for (Object idx : idxs) {
+                        objRelations.add(objects.get(((Long) idx).intValue()));
+                    }
+
+                    allInstances.put(objects.get(i), objRelations);
                 }
 
-                allInstances.put(objects.get(i), objRelations);
+                relations.put(relation, allInstances);
             }
-
-            relations.put(relation, allInstances);
         }
 
         return new CLEVRScene(
