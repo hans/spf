@@ -3,21 +3,47 @@ from argparse import ArgumentParser
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+from scipy import stats
 import seaborn as sns
 
 
 sns.set(color_codes=True)
 
+XLIM = (0, 100)
+YLIM = (-0.1, 1.1)
+
+
+def standard_error(xs):
+  return xs.std() / np.sqrt(len(xs))
+
 
 def main(args):
   results = pd.read_table(args.unified_tsv, header=None, names=["i", "condition", "run", "variable", "value"])
-  results = results[results.variable == "recall"]
+  results = results[results.i <= XLIM[1]]
 
-  sns.tsplot(data=results, time="i", unit="run", condition="condition", value="value")
+  recall = results[results.variable == "recall"]
+  # TODO plot with SEM rather than CI to stay consistent
+  ax = sns.tsplot(data=recall, time="i", unit="run", condition="condition", value="value", zorder=100)
 
-  plt.xlabel("# examples")
-  plt.ylabel("Recall")
+  ax.set_xlabel("# examples")
+  ax.set_ylabel("Recall")
+  ax.set_xlim(XLIM)
+  ax.set_ylim(YLIM)
+
+  # Plot p(shape|N/N) belief on right axis.
+  right_ax = ax.twinx()
+  right_ax.set_ylabel("p(shape|N/N)")
+  # Hack: align grid
+  right_ax.set_yticks(np.linspace(ax.get_yticks()[0], ax.get_yticks()[-1], len(ax.get_yticks())))
+  posterior = results[results.condition != "ccg"]
+  posterior = posterior[posterior.variable == "p(shape|N/N)"]
+  posterior = posterior.groupby("i").value.agg(["mean", standard_error])
+  posterior.plot(y="mean", ax=right_ax, color="#aaaaaa", zorder=1, legend=False)
+  right_ax.fill_between(posterior.index, posterior["mean"] - posterior.standard_error, posterior["mean"] + posterior.standard_error, color="#ccccccaa")
+  right_ax.set_ylim(YLIM)
+
   plt.tight_layout()
   plt.savefig(args.img_out)
 

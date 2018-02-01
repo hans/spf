@@ -51,7 +51,7 @@ def main(args):
 
   #########
 
-  results = results.melt(id_vars=['i', 'run'], value_vars=['precision', 'recall'])
+  results = results.melt(id_vars=['i', 'run'], value_vars=['precision', 'recall', 'p(shape|N/N)'])
 
   if args.img_out:
     sns.tsplot(data=results, time='i', unit='run', condition='variable', value='value')
