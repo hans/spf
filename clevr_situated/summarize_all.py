@@ -25,6 +25,7 @@ def main(args):
 
   recall = results[results.variable == "recall"]
   # TODO plot with SEM rather than CI to stay consistent
+  fig, _ = plt.subplots()
   ax = sns.tsplot(data=recall, time="i", unit="run", condition="condition", value="value", zorder=100)
 
   ax.set_xlabel("# examples")

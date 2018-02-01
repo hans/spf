@@ -9,7 +9,8 @@ for x in $@; do
     echo "p(shape|N/N)" > ${x}.posterior_results
 
     grep -A 1 'Online test results' $x | awk 'BEGIN {OFS="\t"; i = 1} /metric/ {$1=$1; split($2,recall,"="); split($3,precision,"="); split($4,f1,"="); print i, recall[2], precision[2], f1[2]; i += 1}' >> ${x}.online_results
-    grep 'N/N posterior' $x | cut -f2 | cut -d'=' -f2 >> ${x}.posterior_results
+    nrows=`wc -l ${x}.online_results | cut -f1 -d' '`
+    grep 'N/N posterior' $x | cut -f2 | cut -d'=' -f2 | head -n $((nrows-1)) >> ${x}.posterior_results
 
     paste ${x}.online_results ${x}.posterior_results > ${x}.all_results
 done

@@ -17,7 +17,7 @@ def main(args):
   results = []
   for file in args.files:
     file = file.strip()
-    results_i = pd.read_table(file, index_col=0)
+    results_i = pd.read_table(file, index_col=0, dtype={"i": "int"})
     results_i['run'] = file
     results_i = results_i.set_index('run', append=True).reorder_levels(['run', 'i'])
     results.append(results_i)
