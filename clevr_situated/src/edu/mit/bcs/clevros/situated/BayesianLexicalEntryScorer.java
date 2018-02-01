@@ -491,6 +491,7 @@ public class BayesianLexicalEntryScorer implements ISerializableScorer<LexicalEn
         try {
             String scorerPath = buildScript(SYNTAX_SUMMARY_TEMPLATE_PATH, SYNTAX_SUMMARY_PATH, null);
             Counter<String> marginalScores = getMarginalScores(scorerPath);
+            Files.delete(Paths.get(scorerPath));
             return marginalScores;
         } catch (IOException e) {
             e.printStackTrace();
